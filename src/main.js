@@ -1,4 +1,4 @@
-import "./assets/main.css";
+import "./assets/css/main.scss";
 
 import { createApp } from "vue";
 import { createPinia } from "pinia";
@@ -10,10 +10,39 @@ import "vuetify/styles";
 import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
+import "@mdi/font/css/materialdesignicons.css"; // Ensure you are using css-loader
 
 import App from "./App.vue";
 
 const vuetify = createVuetify({
+  theme: {
+    // defaultTheme: "dark",
+    // themes: {
+    //   customDarkTheme,
+    // },
+  },
+  locale: {
+    locale: "fa",
+  },
+  defaults: {
+    global: {
+      hideDetails: "auto",
+    },
+    VTextField: {
+      variant: "outlined",
+    },
+    VBtn: {
+      color: "primary",
+    },
+    VDataTable: {
+      hover: true,
+
+      VBtn: {
+        flat: true,
+        size: "small",
+      },
+    },
+  },
   components,
   directives,
 });

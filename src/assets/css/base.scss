@@ -1,0 +1,194 @@
+@use "sass:meta";
+
+$bp: (
+  "": 0,
+  -sm: 600px,
+  -md: 960px,
+  -lg: 1280px,
+  -xl: 1920,
+  -xxl: 2560px,
+);
+
+// ------------------width---------------------
+@each $name, $num in $bp {
+  @media screen and (min-width: $num) {
+    @for $i from 1 through 20 {
+      .w#{$name}-#{$i*5} {
+        width: $i * 5%;
+      }
+    }
+
+    @for $i from 1 through 50 {
+      .min-w#{$name}-#{$i*10} {
+        min-width: $i * 10px !important;
+      }
+    }
+
+    @for $i from 1 through 200 {
+      .max-w#{$name}-#{$i*10} {
+        max-width: $i * 10px !important;
+      }
+    }
+
+    @for $i from 1 through 150 {
+      .width#{$name}-#{$i*10} {
+        width: $i * 10px !important;
+      }
+    }
+  }
+}
+
+// ------------------height---------------------
+@each $name, $num in $bp {
+  @media screen and (min-width: $num) {
+    @for $i from 1 through 100 {
+      .h#{$name}-#{$i*1} {
+        height: $i * 1%;
+      }
+    }
+
+    @for $i from 1 through 200 {
+      .max-h#{$name}-#{$i*10} {
+        max-height: $i * 10px !important;
+      }
+    }
+
+    @for $i from 1 through 50 {
+      .min-h#{$name}-#{$i*10} {
+        min-height: $i * 10px !important;
+      }
+    }
+
+    @for $i from 1 through 100 {
+      .height#{$name}-#{$i*10} {
+        height: $i * 10px;
+      }
+    }
+  }
+}
+
+@for $i from 1 through 100 {
+  .op-#{$i} {
+    opacity: $i * 0.01 !important;
+  }
+}
+
+@for $i from 1 through 9 {
+  .fw-#{$i * 100} {
+    font-weight: $i * 100 !important;
+  }
+}
+
+@each $name, $num in $bp {
+  @media screen and (min-width: $num) {
+    @for $i from 1 through 100 {
+      .lh#{$name}-#{$i} {
+        line-height: $i * 1px !important;
+      }
+    }
+  }
+}
+
+@each $name, $num in $bp {
+  @media screen and (min-width: $num) {
+    @for $i from 1 through 25 {
+      .rounded#{$name}-#{$i} {
+        border-radius: $i * 1px !important;
+      }
+
+      .rounded-t-r#{$name}-#{$i} {
+        border-top-right-radius: $i * 1px !important;
+      }
+
+      .rounded-t-l#{$name}-#{$i} {
+        border-top-left-radius: $i * 1px !important;
+      }
+
+      .rounded-b-r#{$name}-#{$i} {
+        border-bottom-right-radius: $i * 1px !important;
+      }
+
+      .rounded-b-l#{$name}-#{$i} {
+        border-bottom-left-radius: $i * 1px !important;
+      }
+    }
+  }
+}
+
+@each $name, $num in $bp {
+  @media screen and (min-width: $num) {
+    @for $i from 5 through 50 {
+      .fs#{$name}-#{$i} {
+        font-size: $i * 1px !important;
+      }
+    }
+  }
+}
+
+@each $name, $num in $bp {
+  @media screen and (min-width: $num) {
+    @for $i from 17 through 50 {
+      //---margin
+      .ma#{$name}-#{$i} {
+        margin: $i * 4px !important;
+      }
+
+      .mx#{$name}-#{$i} {
+        margin-right: $i * 4px !important;
+        margin-left: $i * 4px !important;
+      }
+
+      .my#{$name}-#{$i} {
+        margin-top: $i * 4px !important;
+        margin-bottom: $i * 4px !important;
+      }
+
+      .mt#{$name}-#{$i} {
+        margin-top: $i * 4px !important;
+      }
+
+      .mr#{$name}-#{$i} {
+        margin-right: $i * 4px !important;
+      }
+
+      .mb#{$name}-#{$i} {
+        margin-bottom: $i * 4px !important;
+      }
+
+      .ml#{$name}-#{$i} {
+        margin-left: $i * 4px !important;
+      }
+
+      //---padding
+      .pa#{$name}-#{$i} {
+        padding: $i * 4px !important;
+      }
+
+      .px#{$name}-#{$i} {
+        padding-right: $i * 4px !important;
+        padding-left: $i * 4px !important;
+      }
+
+      .py#{$name}-#{$i} {
+        padding-top: $i * 4px !important;
+        padding-bottom: $i * 4px !important;
+      }
+
+      .pt#{$name}-#{$i} {
+        padding-top: $i * 4px !important;
+      }
+
+      .pr#{$name}-#{$i} {
+        padding-right: $i * 4px !important;
+      }
+
+      .pb#{$name}-#{$i} {
+        padding-bottom: $i * 4px !important;
+      }
+
+      .pl#{$name}-#{$i} {
+        padding-left: $i * 4px !important;
+      }
+    }
+  }
+}

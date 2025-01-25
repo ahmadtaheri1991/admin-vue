@@ -1,6 +1,7 @@
 import { fileURLToPath, URL } from "node:url";
 import VueRouter from "unplugin-vue-router/vite";
 import AutoImport from "unplugin-auto-import/vite";
+import Components from "unplugin-vue-components/vite";
 
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
@@ -9,9 +10,7 @@ import vueDevTools from "vite-plugin-vue-devtools";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    VueRouter({
-      /* options */
-    }),
+    VueRouter({}),
     vue(),
     AutoImport({
       imports: [
@@ -20,15 +19,20 @@ export default defineConfig({
         "pinia",
         {
           "@tanstack/vue-query": ["useQuery", "useMutation"],
+          axios: [
+            // default imports
+            ["default", "axios"], // import { default as axios } from 'axios',
+          ],
         },
-        // {
-        //   "pinia-plugin-persistedstate": [
-        //     ["default", "piniaPluginPersistedstate "],
-        //   ],
-        // },
       ],
-      dirs: ["./src/stores", "./src/components"],
+      dirs: [
+        "./src/stores",
+        "./src/components",
+        "./src/utils",
+        "./src/layouts",
+      ],
     }),
+    Components({}),
     vueDevTools(),
   ],
   resolve: {

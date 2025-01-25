@@ -1,0 +1,51 @@
+@import "./base.scss";
+@import "../fonts/Javan/javan.css";
+@import "../fonts/iranyekan/iranYekan.css";
+
+* {
+  font-family: iranyekan !important;
+  letter-spacing: normal;
+}
+
+// .v-data-table.no-divider tr td,
+// th {
+//   border: none !important;
+// }
+
+.v-data-table.transparent {
+  background-color: transparent !important;
+}
+
+.v-data-table {
+  table {
+    tr {
+      th,
+      td {
+        padding: 0 5px !important;
+        font-size: 13px;
+      }
+    }
+  }
+}
+
+.text-bold {
+  font-weight: 700 !important;
+
+  th {
+    font-weight: 700 !important;
+  }
+}
+
+.px-low .v-field__input {
+  padding: 4px !important;
+  min-height: 35px;
+}
+
+.text-center .v-field__input {
+  text-align: center;
+  direction: ltr;
+}
+
+p {
+  margin-bottom: 16px;
+}
