@@ -1,5 +1,5 @@
 import axios from "axios";
-
+import router from "./router";
 // Set base URL for all requests (Optional: replace with your API endpoint)
 const axiosInstance = axios.create({
   baseURL: "http://localhost:5000/api", // Replace with your API's base URL
@@ -14,7 +14,9 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     // Modify request config here (e.g., add an Authorization header)
-    const token = JSON.parse(localStorage.authStore)?.token; // Example: Get token from localStorage
+    const token = localStorage.authStore
+      ? JSON.parse(localStorage.authStore).token
+      : null;
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
@@ -32,7 +34,9 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     // Handle errors (e.g., for showing error messages to the user)
-    return Promise.reject(error);
+    if (error.status == 401) {
+      router.push("/login");
+    } else return Promise.reject(error);
   }
 );
 

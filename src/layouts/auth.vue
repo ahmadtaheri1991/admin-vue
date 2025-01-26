@@ -5,7 +5,7 @@
     <v-layout>
       <v-main>
         <v-container>
-          <slot />
+          <router-view />
         </v-container>
       </v-main>
     </v-layout>

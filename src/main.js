@@ -1,5 +1,5 @@
 import "./assets/css/main.scss";
-
+import router from "./router";
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
@@ -46,7 +46,6 @@ const vuetify = createVuetify({
   components,
   directives,
 });
-import router from "./router";
 
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);

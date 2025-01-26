@@ -1,7 +1,15 @@
 <script setup>
-import { RouterView } from "vue-router";
+import DefaultLayout from "@/layouts/default.vue";
+
+const route = useRoute();
+
+const isShowDefaultLayout = computed(() => {
+  return route.name ? !route.name.includes("login") : false;
+});
 </script>
 
 <template>
-  <RouterView />
+  <DefaultLayout v-if="isShowDefaultLayout" />
+
+  <router-view />
 </template>
