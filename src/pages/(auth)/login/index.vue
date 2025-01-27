@@ -20,6 +20,7 @@ const { mutate, isPending } = useMutation({
   mutationFn: (body) => axios.post("login", body),
   onSuccess: (data) => {
     authStore.setToken(data.token);
+    authStore.setRefreshToken(data.refreshToken);
     router.push("/");
   },
   onError: (error) => {

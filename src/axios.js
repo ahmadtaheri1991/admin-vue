@@ -32,12 +32,33 @@ axiosInstance.interceptors.response.use(
     // Handle the response here
     return response.data;
   },
-  (error) => {
+  async (error) => {
     // Handle errors (e.g., for showing error messages to the user)
+    console.log(error);
     if (error.status == 401) {
+      router.push("/login");
+    } else if (
+      error.status == 403 &&
+      error.response.data.message == "Invalid or expired token."
+    ) {
+      refreshToken();
+    } else if (
+      error.status == 403 &&
+      error.response.data.message == "Invalid or expired refresh token."
+    ) {
       router.push("/login");
     } else return Promise.reject(error);
   }
 );
+
+function refreshToken() {
+  axios.post("http://localhost:5000/api/refreshToken", null, {
+    headers: {
+      Authorization: `Bearer ${
+        JSON.parse(localStorage.authStore).refreshToken
+      }`,
+    },
+  });
+}
 
 export default axiosInstance;
