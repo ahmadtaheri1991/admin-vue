@@ -11,5 +11,5 @@ const isShowDefaultLayout = computed(() => {
 <template>
   <DefaultLayout v-if="isShowDefaultLayout" />
 
-  <router-view />
+  <router-view v-else />
 </template>

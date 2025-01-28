@@ -73,8 +73,10 @@ export function areYouSure(title, confirmButtonText, cancelButtonText) {
     icon: "question",
     text: title || "آیا مطمئن هستید؟",
     confirmButtonText: confirmButtonText || "بله",
+    confirmButtonColor: "#05b105",
     showCancelButton: true,
     cancelButtonText: cancelButtonText || "خیر",
+    cancelButtonColor: "#B00020",
   });
 }
 

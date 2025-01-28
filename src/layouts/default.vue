@@ -1,12 +1,25 @@
 <script setup>
+import { useAuthStore } from "@/stores/auth";
+import { areYouSure } from "@/utils/functions";
 import { useDisplay } from "vuetify";
 
 const { xs } = useDisplay();
 const drawer = ref(false);
 
+const authStore = useAuthStore();
+const router = useRouter();
+
 onMounted(() => {
   if (!xs.value) drawer.value = true;
 });
+
+async function showSwal() {
+  const { isConfirmed } = await areYouSure();
+  if (!isConfirmed) return;
+
+  authStore.unsetTokens();
+  router.push("/login");
+}
 </script>
 
 <template>
@@ -30,6 +43,7 @@ onMounted(() => {
         <v-list-item link to="/orders" title="سفارشات" />
         <!-- <v-list-item link to="/orders" title="در حال اتمام" /> -->
         <!-- <v-list-item link to="/orders" title="گزارش فروش" /> -->
+        <v-list-item @click="showSwal()" title="خروج" />
       </v-navigation-drawer>
 
       <v-main>

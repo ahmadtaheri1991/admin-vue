@@ -1,18 +1,23 @@
 export const useAuthStore = defineStore("authStore", {
   state: () => ({
-    token: null,
+    accessToken: null,
     refreshToken: null,
   }),
 
   getters: {},
 
   actions: {
-    setToken(token) {
-      this.token = token;
+    setAccessToken(accessToken) {
+      this.accessToken = accessToken;
     },
 
     setRefreshToken(refreshToken) {
       this.refreshToken = refreshToken;
+    },
+
+    unsetTokens() {
+      this.accessToken = null;
+      this.refreshToken = null;
     },
   },
 

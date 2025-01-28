@@ -6,6 +6,8 @@ const router = useRouter();
 const appStore = useAppStore();
 const authStore = useAuthStore();
 
+if (authStore.accessToken) router.push("/");
+
 const form = reactive({
   username: "",
   password: "",
@@ -19,7 +21,7 @@ function togglePassword() {
 const { mutate, isPending } = useMutation({
   mutationFn: (body) => axios.post("login", body),
   onSuccess: (data) => {
-    authStore.setToken(data.token);
+    authStore.setAccessToken(data.accessToken);
     authStore.setRefreshToken(data.refreshToken);
     router.push("/");
   },

@@ -1,24 +1,22 @@
 import axios from "axios";
 import router from "./router";
-// Set base URL for all requests (Optional: replace with your API endpoint)
+import { useAuthStore } from "./stores/auth";
+
+const baseURL = "http://localhost:5000/admin";
+
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:5000/api", // Replace with your API's base URL
-  timeout: 10000, // Optional: timeout in ms
-  headers: {
-    "Content-Type": "application/json",
-    // Add any other default headers if needed
-  },
+  baseURL,
+  timeout: 10000,
+  headers: { "Content-Type": "application/json" },
 });
 
-// You can add interceptors here if needed (e.g., for adding auth tokens)
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Modify request config here (e.g., add an Authorization header)
-    const token = localStorage.authStore
-      ? JSON.parse(localStorage.authStore).token
-      : null;
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+    const authStore = useAuthStore();
+    const accessToken = authStore.accessToken;
+
+    if (accessToken) {
+      config.headers["Authorization"] = `Bearer ${accessToken}`;
     }
     return config;
   },
@@ -28,37 +26,37 @@ axiosInstance.interceptors.request.use(
 );
 
 axiosInstance.interceptors.response.use(
-  (response) => {
-    // Handle the response here
-    return response.data;
-  },
+  (response) => response.data,
   async (error) => {
-    // Handle errors (e.g., for showing error messages to the user)
-    console.log(error);
-    if (error.status == 401) {
-      router.push("/login");
-    } else if (
-      error.status == 403 &&
-      error.response.data.message == "Invalid or expired token."
-    ) {
-      refreshToken();
-    } else if (
-      error.status == 403 &&
-      error.response.data.message == "Invalid or expired refresh token."
-    ) {
-      router.push("/login");
-    } else return Promise.reject(error);
+    const originalRequest = error.config;
+
+    if ([401, 403].includes(error.status) && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      const authStore = useAuthStore();
+      try {
+        const refreshToken = authStore.refreshToken;
+        const {
+          data: { accessToken },
+        } = await axios.post(`${baseURL}/refreshToken`, {
+          refreshToken,
+        });
+
+        const newAccessToken = accessToken;
+        authStore.setAccessToken(newAccessToken);
+        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+        const { data } = await axios(originalRequest);
+        return data;
+      } catch (err) {
+        console.error("Error refreshing token", err);
+        authStore.unsetTokens();
+        router.push("login");
+        return Promise.reject(err);
+      }
+    }
+
+    return Promise.reject(error);
   }
 );
-
-function refreshToken() {
-  axios.post("http://localhost:5000/api/refreshToken", null, {
-    headers: {
-      Authorization: `Bearer ${
-        JSON.parse(localStorage.authStore).refreshToken
-      }`,
-    },
-  });
-}
 
 export default axiosInstance;
