@@ -1,85 +1,136 @@
 <script setup>
 import axios from "@/axios";
+import { areYouSure } from "@/utils/functions";
+
+const headers_category = [
+  { title: "شناسه", key: "id" },
+  { title: "نام", key: "name" },
+  { title: "عملیات", key: "actions", align: "center", sortable: false },
+];
+
+const headers_product = [
+  { title: "شناسه", key: "id" },
+  { title: "نام", key: "name" },
+  { title: "دسته‌بندی", key: "category" },
+  { title: "عملیات", key: "actions", align: "center", sortable: false },
+];
 
 const appStore = useAppStore();
 const showProduct = ref(false);
 
-const { isLoading, data, refetch } = useQuery({
+const {
+  data: categories,
+  refetch: refetch_categories,
+  isPending: isLoading_categories,
+} = useQuery({
   queryKey: ["categories"],
   queryFn: () => axios.get("categories"),
 });
 
 const {
-  isLoading: isProductsLoading,
   data: products,
-  refetch: refetchProducts,
+  refetch: refetch_products,
+  isPending: isLoading_products,
 } = useQuery({
   queryKey: ["products"],
   queryFn: () => axios.get("products"),
 });
 
-const { mutate, isLoading: isCreateLoading } = useMutation({
-  mutationFn: (body) => axios.post("categories/create", body),
-  onSuccess: ({ data }) => {
-    appStore.openAlert(0, "با موفقیت افزوده شد");
-    refetch();
-    dialog.close();
-  },
-  onError: (error) => {
-    console.log(error);
-    const { data } = error.response;
-    if (data.message) appStore.openAlert(2, data.message);
-    else appStore.openAlert(2, "عملیات با خطا مواجه شد");
-  },
-});
+const { mutate: createCategory, isPending: isLoading_createCategory } =
+  useMutation({
+    mutationFn: (body) => axios.post("categories", body),
+    onSuccess: () => {
+      appStore.openAlert(0, "با موفقیت افزوده شد");
+      refetch_categories();
+      dialog.close();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
 
-const { mutate: updateCategory, isLoading: isUpdateLoading } = useMutation({
-  mutationFn: (id, body) => axios.patch(`categories/${id}`, body),
-  onSuccess: ({ data }) => {
-    appStore.openAlert(0, "با موفقیت ویرایش شد");
-    refetch();
-    dialog.close();
-  },
-  onError: (error) => {
-    console.log(error);
-    const { data } = error.response;
-    if (data.message) appStore.openAlert(2, data.message);
-    else appStore.openAlert(2, "عملیات با خطا مواجه شد");
-  },
-});
+const { mutate: updateCategory, isPending: isLoading_updateCategory } =
+  useMutation({
+    mutationFn: (id, body) => axios.patch(`categories/${id}`, body),
+    onSuccess: () => {
+      appStore.openAlert(0, "با موفقیت ویرایش شد");
+      refetch_categories();
+      dialog.close();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
 
-const { mutate: deleteCategory, isLoading: isDeleteLoading } = useMutation({
-  mutationFn: (id) => axios.delete(`categories/delete/${id}`),
-  onSuccess: ({ data }) => {
-    appStore.openAlert(0, "حذف با موفقیت انجام شد");
-    refetch();
-  },
-  onError: (error) => {
-    console.log(error);
-    const { data } = error.response;
-    if (data.message) appStore.openAlert(2, data.message);
-    else appStore.openAlert(2, "عملیات با خطا مواجه شد");
-  },
-});
+const { mutate: deleteCategory, isPending: isLoading_deleteCategory } =
+  useMutation({
+    mutationFn: (id) => axios.delete(`categories/${id}`),
+    onSuccess: () => {
+      appStore.openAlert(0, "حذف با موفقیت انجام شد");
+      refetch_categories();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
 
-const table = reactive({
-  headers: [
-    { title: "شناسه", key: "id" },
-    { title: "نام", key: "name" },
-    { title: "عملیات", key: "actions", align: "center", sortable: false },
-  ],
-  itemsPerPage: 10,
-});
+const { mutate: createProduct, isPending: isLoading_createProduct } =
+  useMutation({
+    mutationFn: (body) => axios.post("products", body),
+    onSuccess: () => {
+      appStore.openAlert(0, "با موفقیت افزوده شد");
+      productSection.formRef.reset();
+      refetch_products();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
 
-const productTable = reactive({
-  headers: [
-    { title: "شناسه", key: "id" },
-    { title: "نام", key: "name" },
-    { title: "دسته‌بندی", key: "category" },
-    { title: "عملیات", key: "actions", align: "center", sortable: false },
-  ],
-  itemsPerPage: 10,
-});
+const { mutate: updateProduct, isPending: isLoading_updateProduct } =
+  useMutation({
+    mutationFn: (id, body) => axios.patch(`products/${id}`, body),
+    onSuccess: () => {
+      appStore.openAlert(0, "با موفقیت ویرایش شد");
+      productSection.clear();
+      refetch_products();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
+const { mutate: deleteProduct, isPending: isLoading_deleteProduct } =
+  useMutation({
+    mutationFn: (id) => axios.delete(`products/${id}`),
+    onSuccess: () => {
+      appStore.openAlert(0, "حذف با موفقیت انجام شد");
+      refetch_products();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
+const deletingItemId = ref(0);
 
 const dialog = reactive({
   canBeShown: false,
@@ -107,7 +158,7 @@ const dialog = reactive({
     const formData = new FormData();
     formData.append("name", this.form.name);
     formData.append("image", this.form.image[0]);
-    mutate(formData);
+    createCategory(formData);
   },
   update() {
     const formData = new FormData();
@@ -121,7 +172,6 @@ const productSection = reactive({
   canBeShown: false,
   item: null,
   formRef: null,
-  submitLoading: false,
   form: {
     name: "",
     category: null,
@@ -143,7 +193,7 @@ const productSection = reactive({
       this.form.description = item.description;
     }
   },
-  async add() {
+  add() {
     const formData = new FormData();
     formData.append("name", this.form.name);
     formData.append("categoryId", selectedCat.value.id);
@@ -153,22 +203,9 @@ const productSection = reactive({
       formData.append("gallery", image);
     });
 
-    this.submitLoading = true;
-    const { error } = await axios.post("products/create", formData);
-    this.submitLoading = false;
-
-    if (error.value) {
-      const { data } = error.value;
-      if (data.message) appStore.openAlert(2, data.message);
-      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
-      return;
-    }
-
-    appStore.openAlert(0, "با موفقیت افزوده شد");
-    this.formRef.reset();
-    refetchProducts();
+    createProduct(formData);
   },
-  async update() {
+  update() {
     const formData = new FormData();
     formData.append("name", this.form.name);
     formData.append("categoryId", this.form.category);
@@ -177,18 +214,7 @@ const productSection = reactive({
     if (this.form.coverImage.length)
       formData.append("image", this.form.coverImage[0]);
 
-    this.submitLoading = true;
-    const { error } = await axios.patch(`products/${this.item.id}`, formData);
-    this.submitLoading = false;
-
-    if (error.value) {
-      appStore.openAlert(2, "عملیات با خطا مواجه شد");
-      return;
-    }
-
-    appStore.openAlert(0, "با موفقیت ویرایش شد");
-    this.clear();
-    refetchProducts();
+    updateProduct(this.item.id, formData);
   },
   clear() {
     this.item = null;
@@ -200,21 +226,20 @@ const productSection = reactive({
 
 const selectedCat = ref(null);
 
-async function deleteItem(item) {
-  const { isConfirmed } = await $swal.fire({
-    icon: "question",
-    text: "آیا مطمئن هستید؟",
-    confirmButtonText: "بله",
-    showCancelButton: true,
-    cancelButtonText: "خیر",
-    customClass: {
-      cancelButton: "bg-red",
-      confirmButton: "bg-success",
-    },
-  });
+async function deleteCategoryItem(item) {
+  const { isConfirmed } = await areYouSure();
   if (!isConfirmed) return;
 
+  deletingItemId.value = item.id;
   deleteCategory(item.id);
+}
+
+async function deleteProductItem(item) {
+  const { isConfirmed } = await areYouSure();
+  if (!isConfirmed) return;
+
+  deletingItemId.value = item.id;
+  deleteProduct(item.id);
 }
 
 function addProductHandler(item) {
@@ -234,10 +259,10 @@ function addProductHandler(item) {
 
     <v-data-table
       class="border"
-      :headers="table.headers"
-      :items="data"
-      :items-per-page="table.itemsPerPage"
-      :loading="isLoading"
+      :headers="headers_category"
+      :items="categories"
+      :items-per-page="10"
+      :loading="isLoading_categories"
     >
       <template #item.actions="{ item }">
         <div class="d-flex justify-center">
@@ -257,8 +282,8 @@ function addProductHandler(item) {
             class="mx-1"
             text="حذف"
             color="error"
-            :loading="item.deleteLoading"
-            @click="deleteItem(item)"
+            :loading="isLoading_deleteCategory && deletingItemId == item.id"
+            @click="deleteCategoryItem(item)"
           />
         </div>
       </template>
@@ -344,7 +369,7 @@ function addProductHandler(item) {
             min-width="100"
             color="primary"
             :text="productSection.item ? 'ویرایش' : 'افزودن'"
-            :loading="productSection.submitLoading"
+            :loading="isLoading_createProduct || isLoading_updateProduct"
           />
 
           <v-btn
@@ -359,10 +384,10 @@ function addProductHandler(item) {
 
     <v-data-table
       class="border"
-      :headers="productTable.headers"
+      :headers="headers_product"
       :items="products?.filter((x) => x.categoryId == selectedCat.id)"
-      :items-per-page="productTable.itemsPerPage"
-      :loading="isProductsLoading"
+      :items-per-page="10"
+      :loading="isLoading_products"
     >
       <template #item.category="{ item }">
         {{ item.category.name }}
@@ -380,8 +405,8 @@ function addProductHandler(item) {
             class="mx-1"
             text="حذف"
             color="error"
-            :loading="item.deleteLoading"
-            @click="deleteItem(item)"
+            :loading="isLoading_deleteProduct && deletingItemId == item.id"
+            @click="deleteProductItem(item)"
           />
         </div>
       </template>
@@ -438,7 +463,7 @@ function addProductHandler(item) {
             min-width="100"
             color="primary"
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
-            :loading="isUpdateLoading || isCreateLoading"
+            :loading="isLoading_createCategory || isLoading_updateCategory"
           />
 
           <v-btn
