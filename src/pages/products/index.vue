@@ -1,6 +1,7 @@
 <script setup>
 import { useAppStore } from "@/stores/app";
 import { areYouSure } from "@/utils/functions";
+import axios from "@/axios";
 
 const headers_product = [
   { title: "شناسه", key: "id" },
@@ -39,6 +40,18 @@ const {
   queryFn: () => axios.get("productModels"),
 });
 
+const { data: categories } = useQuery({
+  queryKey: ["categories"],
+  queryFn: () => axios.get("categories"),
+  select: (items) => items.map((x) => ({ value: x.id, title: x.name })),
+});
+
+const { data: weights } = useQuery({
+  queryKey: ["weights"],
+  queryFn: () => axios.get("weights"),
+  select: (items) => items.map((x) => ({ value: x.id, title: x.name })),
+});
+
 const { mutate: createProduct, isPending: isLoading_createProduct } =
   useMutation({
     mutationFn: (body) => axios.post("products", body),
@@ -70,6 +83,70 @@ const { mutate: updateProduct, isPending: isLoading_updateProduct } =
       else appStore.openAlert(2, "عملیات با خطا مواجه شد");
     },
   });
+
+const { mutate: deleteProduct, isPending: isLoading_deleteProduct } =
+  useMutation({
+    mutationFn: (id) => axios.delete(`products/${id}`),
+    onSuccess: () => {
+      appStore.openAlert(0, "حذف با موفقیت انجام شد");
+      refetch_products();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
+const { mutate: createProductModel, isPending: isLoading_createProductModel } =
+  useMutation({
+    mutationFn: (body) => axios.post("productModels", body),
+    onSuccess: () => {
+      appStore.openAlert(0, "با موفقیت افزوده شد");
+      productModelSection.formRef.reset();
+      refetch_productModels();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
+const { mutate: updateProductModel, isPending: isLoading_updateProductModel } =
+  useMutation({
+    mutationFn: (id, body) => axios.patch(`productModels/${id}`, body),
+    onSuccess: () => {
+      appStore.openAlert(0, "با موفقیت ویرایش شد");
+      productModelSection.clear();
+      refetch_productModels();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
+const { mutate: deleteProductModel, isPending: isLoading_deleteProductModel } =
+  useMutation({
+    mutationFn: (id) => axios.delete(`productModels/${id}`),
+    onSuccess: () => {
+      appStore.openAlert(0, "حذف با موفقیت انجام شد");
+      refetch_productModels();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
+const deletingItemId = ref(0);
 
 const dialog = reactive({
   canBeShown: false,
@@ -128,7 +205,6 @@ const productModelSection = reactive({
   canBeShown: false,
   item: null,
   formRef: null,
-  submitLoading: false,
   form: {
     category: null,
     product: null,
@@ -150,56 +226,25 @@ const productModelSection = reactive({
       this.form.inventory = item.inventory;
     }
   },
-  async add() {
-    this.submitLoading = true;
-    const { error } = await useFetch(`${apiBase}/productModels/create`, {
-      method: "post",
-      body: {
-        categoryId: selectedProduct.value.categoryId,
-        productId: selectedProduct.value.id,
-        weightId: this.form.weight,
-        price: this.form.price,
-        inventory: this.form.inventory,
-      },
-    });
-    this.submitLoading = false;
-
-    if (error.value) {
-      const { data } = error.value;
-      if (data.message) appStore.openAlert(2, data.message);
-      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
-      return;
-    }
-
-    appStore.openAlert(0, "با موفقیت افزوده شد");
-    this.formRef.reset();
-    productModelTable.refresh();
+  add() {
+    const body = {
+      categoryId: selectedProduct.value.categoryId,
+      productId: selectedProduct.value.id,
+      weightId: this.form.weight,
+      price: this.form.price,
+      inventory: this.form.inventory,
+    };
+    createProductModel(body);
   },
-  async update() {
-    this.submitLoading = true;
-    const { error } = await useFetch(
-      `${apiBase}/productModels/${this.item.id}`,
-      {
-        method: "patch",
-        body: {
-          categoryId: this.form.category,
-          productId: this.form.product,
-          weightId: this.form.weight,
-          price: this.form.price,
-          inventory: this.form.inventory,
-        },
-      }
-    );
-    this.submitLoading = false;
-
-    if (error.value) {
-      appStore.openAlert(2, "عملیات با خطا مواجه شد");
-      return;
-    }
-
-    appStore.openAlert(0, "با موفقیت ویرایش شد");
-    this.clear();
-    productModelTable.refresh();
+  update() {
+    const body = {
+      categoryId: this.form.category,
+      productId: this.form.product,
+      weightId: this.form.weight,
+      price: this.form.price,
+      inventory: this.form.inventory,
+    };
+    updateProductModel(this.item.id, body);
   },
   clear() {
     this.item = null;
@@ -207,24 +252,20 @@ const productModelSection = reactive({
   },
 });
 
-const { data: categories } = await useFetch(`${apiBase}/categories`, {
-  transform: (items) => items.map((x) => ({ value: x.id, title: x.name })),
-});
-
-const { data: weights } = await useFetch(`${apiBase}/weights`, {
-  transform: (items) => items.map((x) => ({ value: x.id, title: x.name })),
-});
-
-async function deleteItem(item) {
+async function deleteProductItem(item) {
   const { isConfirmed } = await areYouSure();
   if (!isConfirmed) return;
 
-  const { error } = await useFetch(`/products/${item.id}`, {
-    method: "delete",
-  });
+  deletingItemId.value = item.id;
+  deleteProduct(item.id);
+}
 
-  appStore.openAlert(0, "حذف با موفقیت انجام شد");
-  table.refresh();
+async function deleteProductModelItem(item) {
+  const { isConfirmed } = await areYouSure();
+  if (!isConfirmed) return;
+
+  deletingItemId.value = item.id;
+  deleteProductModel(item.id);
 }
 
 const selectedProduct = ref(null);
@@ -247,10 +288,10 @@ function addProductModelHandler(item) {
 
     <v-data-table
       class="border"
-      :headers="table.headers"
-      :items="table.items"
+      :headers="headers_product"
+      :items="products"
       :items-per-page="10"
-      :loading="table.loading"
+      :loading="isLoading_products"
     >
       <template #item.category="{ item }">
         {{ item.category.name }}
@@ -274,8 +315,8 @@ function addProductModelHandler(item) {
             class="mx-1"
             text="حذف"
             color="error"
-            :loading="item.deleteLoading"
-            @click="deleteItem(item)"
+            :loading="isLoading_deleteProduct && deletingItemId == item.id"
+            @click="deleteProductItem(item)"
           />
         </div>
       </template>
@@ -351,7 +392,9 @@ function addProductModelHandler(item) {
             min-width="100"
             color="primary"
             :text="productModelSection.item ? 'ویرایش' : 'افزودن'"
-            :loading="productModelSection.submitLoading"
+            :loading="
+              isLoading_createProductModel || isLoading_updateProductModel
+            "
           />
 
           <v-btn
@@ -366,12 +409,10 @@ function addProductModelHandler(item) {
 
     <v-data-table
       class="border"
-      :headers="productModelTable.headers"
-      :items="
-        productModelTable.items.filter((x) => x.productId == selectedProduct.id)
-      "
+      :headers="headers_productModel"
+      :items="productModels.filter((x) => x.productId == selectedProduct.id)"
       :items-per-page="10"
-      :loading="productModelTable.loading"
+      :loading="isLoading_productModels"
     >
       <template #item="{ item }">
         <tr :class="{ 'bg-red-lighten-4': item.inventory < 10 }">
@@ -393,8 +434,10 @@ function addProductModelHandler(item) {
                 class="mx-1"
                 text="حذف"
                 color="error"
-                :loading="item.deleteLoading"
-                @click="deleteItem(item)"
+                :loading="
+                  isLoading_deleteProductModel && deletingItemId == item.id
+                "
+                @click="deleteProductModelItem(item)"
               />
             </div>
           </td>
@@ -484,7 +527,7 @@ function addProductModelHandler(item) {
             min-width="100"
             color="primary"
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
-            :loading="dialog.submitLoading"
+            :loading="isLoading_createProduct || isLoading_updateProduct"
           />
 
           <v-btn

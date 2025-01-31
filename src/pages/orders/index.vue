@@ -1,7 +1,7 @@
 <script setup>
-import Swal from "sweetalert2";
-// import Swal from "sweetalert2/dist/sweetalert2.js";
-// import "sweetalert2/src/sweetalert2.scss";
+import { areYouSure, toPersianDigit } from "@/utils/functions";
+import axios from "@/axios";
+import { nextTick } from "vue";
 
 const statusColors = {
   pending: "grey",
@@ -15,49 +15,74 @@ const statusTitles = {
   preparation: "آماده سازی",
   posted: "پست شده",
 };
-const {
-  public: { apiBase, urlBase },
-} = useRuntimeConfig();
 
-const table = reactive({
-  headers: [
-    { title: "", key: "id", width: 40, sortable: false, align: "center" },
-    { title: "نام و نام‌خانوادگی", key: "fullName" },
-    { title: "شماره تماس", key: "phone" },
-    // { title: 'مجموع', key: 'totalPrice' },
-    // { title: "مبلغ قابل پرداخت", key: "payablePrice" },
-    // { title: 'هزینه ارسال', key: 'sendCost' }
-    // { title: "شماره کارت", key: "lastFourDigits", align: "center" },
-    // { title: "زمان", key: "datetime", align: "center" },
-    { title: "زمان ثبت سفارش", key: "createdAt", align: "center" },
-    { title: "وضعیت", key: "status", align: "center" },
-    { title: "عملیات", key: "actions", align: "center" },
-  ],
-  items: [],
-  loading: false,
-  itemsPerPage: 10,
-  refresh: null,
-});
+const headers_order = [
+  { title: "", key: "id", width: 40, sortable: false, align: "center" },
+  { title: "نام و نام‌خانوادگی", key: "fullName" },
+  { title: "شماره تماس", key: "phone" },
+  { title: "زمان ثبت سفارش", key: "createdAt", align: "center" },
+  { title: "وضعیت", key: "status", align: "center" },
+  { title: "عملیات", key: "actions", align: "center" },
+];
 
 const filteredItems = computed(() => {
-  return table.items?.filter(x =>
-    [x.fullName, x.phone].some(y => y.indexOf(search.value.trim()) > -1)
+  return orders.value?.filter((x) =>
+    [x.fullName, x.phone].some((y) => y.indexOf(search.value.trim()) > -1)
   );
 });
 
-({
-  data: table.items = [],
-  pending: table.loading,
-  refresh: table.refresh,
-} = await useFetch(`${apiBase}/orders`, {
-  transform: items =>
-    items.map(x => ({
-      ...x,
-      isAcceptLoading: false,
-      isRejectLoading: false,
-      postLoading: false,
-    })),
-}));
+const {
+  data: orders,
+  refetch: refetch_orders,
+  isPending: isLoading_orders,
+} = useQuery({
+  queryKey: ["orders"],
+  queryFn: () => axios.get("orders"),
+});
+
+const { mutate: acceptOrder, isPending: isLoading_acceptOrder } = useMutation({
+  mutationFn: (id) => axios.patch(`orders/accept/${id}`),
+  onSuccess: () => {
+    refetch_orders();
+  },
+  onError: (error) => {
+    console.log(error);
+    const { data } = error.response;
+    if (data.message) appStore.openAlert(2, data.message);
+    else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+  },
+});
+
+const { mutate: rejectOrder, isPending: isLoading_rejectOrder } = useMutation({
+  mutationFn: (id) => axios.patch(`orders/reject/${id}`),
+  onSuccess: () => {
+    refetch_orders();
+  },
+  onError: (error) => {
+    console.log(error);
+    const { data } = error.response;
+    if (data.message) appStore.openAlert(2, data.message);
+    else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+  },
+});
+
+const { mutate: deliverOrder, isPending: isLoading_deliverOrder } = useMutation(
+  {
+    mutationFn: (id, body) => axios.patch(`orders/deliver/${id}`, body),
+    onSuccess: () => {
+      refetch_orders();
+      // sendSMS(item);
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  }
+);
+
+const deliveringItemId = ref(0);
 
 const dialog = reactive({
   canBeShown: false,
@@ -73,69 +98,36 @@ const dialog = reactive({
       { title: "عملیات", key: "actions" },
     ],
     items: [],
-    itemsPerPage: 10,
   },
   open(item) {
     this.canBeShown = true;
     this.item = item;
 
-    this.table.items = this.item.orderItems.map(x => ({
-      ...x,
-      name: x.product.name,
-      weight: x.weight.name,
-      unitPrice: x.price,
-      totalPrice: x.count * x.price,
-      alternate: x.editOrderItems,
-    }));
+    this.table.items = computed(() =>
+      this.item.orderItems.map((x) => ({
+        ...x,
+        name: x.product.name,
+        weight: x.weight.name,
+        unitPrice: x.price,
+        totalPrice: x.count * x.price,
+        alternate: x.editOrderItems,
+      }))
+    );
   },
   close() {
     this.canBeShown = false;
   },
 });
 
-async function acceptOrder(item) {
-  item.isAcceptLoading = true;
-  await useFetch(`${apiBase}/orders/accept`, {
-    method: "patch",
-    body: { id: item.id },
-  });
-  await table.refresh();
-  item.isAcceptLoading = false;
-}
-
-async function rejectOrder(item) {
-  item.isRejectLoading = true;
-  await useFetch(`${apiBase}/orders/reject`, {
-    method: "patch",
-    body: { id: item.id },
-  });
-  await table.refresh();
-  item.isRejectLoading = false;
-}
-
 const search = ref("");
-async function postHandler(item) {
-  const { isConfirmed } = await Swal.fire({
-    icon: "question",
-    text: `آیا مطمئن هستید؟`,
-    confirmButtonText: "بله",
-    showCancelButton: true,
-    cancelButtonText: "خیر",
-    customClass: {
-      cancelButton: "bg-red",
-      confirmButton: "bg-success",
-    },
-  });
 
+async function postHandler(item) {
+  const { isConfirmed } = await areYouSure();
   if (!isConfirmed) return;
-  item.postLoading = true;
-  await useFetch(`${apiBase}/orders/deliver`, {
-    method: "patch",
-    body: { id: item.id, deliveryCode: item.deliveryCode },
-  });
-  await table.refresh();
-  item.postLoading = false;
-  // sendSMS(item);
+
+  deliveringItemId.value = item.id;
+  const body = { deliveryCode: item.deliveryCode };
+  deliverOrder(item.id, body);
 }
 
 async function sendSMS(item) {
@@ -157,45 +149,59 @@ async function sendSMS(item) {
     redirect: "follow",
   };
   fetch("https://api.sms.ir/v1/send/verify", requestOptions)
-    .then(response => response.text())
-    .then(result => console.log(result))
-    .catch(error => console.log("error", error));
+    .then((response) => response.text())
+    .then((result) => console.log(result))
+    .catch((error) => console.log("error", error));
 }
 
-const { data: categories = [] } = await useFetch(`${apiBase}/categories`, {
-  transform: items =>
-    items.map(x => ({
-      value: x.id,
-      title: x.name,
-    })),
+const { data: categories } = useQuery({
+  queryKey: ["categories"],
+  queryFn: () => axios.get("categories"),
+  select: (items) => items.map((x) => ({ value: x.id, title: x.name })),
 });
 
-const { data: products = [] } = await useFetch(`${apiBase}/products`, {
-  transform: items =>
-    items.map(x => ({
+const { data: products } = useQuery({
+  queryKey: ["products"],
+  queryFn: () => axios.get("products"),
+  select: (items) => items.map((x) => ({ ...x, value: x.id, title: x.name })),
+});
+
+const { data: productModels } = useQuery({
+  queryKey: ["productModels"],
+  queryFn: () => axios.get("productModels"),
+  select: (items) =>
+    items.map((x) => ({
       ...x,
       value: x.id,
-      title: x.name,
+      title: x.product.name + ` (${x.weight.name})`,
     })),
 });
 
-const { data: productModels = [] } = await useFetch(
-  `${apiBase}/productModels`,
-  {
-    transform: items =>
-      items.map(x => ({
-        ...x,
-        value: x.id,
-        title: item.product.name + ` (${item.weight.name})`,
-      })),
-  }
-);
+const {
+  mutate: createEditOrderItem,
+  isPending: isLoading_createEditOrderItem,
+} = useMutation({
+  mutationFn: (body) => axios.post("editOrderItem", body),
+  onSuccess: async () => {
+    await refetch_orders();
+    orderItemDialog.close();
+    // dialog.close();
+    // await nextTick();
+    dialog.item = orders.value.find((x) => x.id == dialog.item.id);
+    // dialog.open(dialog.item);
+  },
+  onError: (error) => {
+    console.log(error);
+    const { data } = error.response;
+    if (data.message) appStore.openAlert(2, data.message);
+    else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+  },
+});
 
 const orderItemDialog = reactive({
   canBeShown: false,
   item: null,
   formRef: null,
-  isSubmitLoading: false,
   form: {
     category: null,
     product: null,
@@ -214,83 +220,73 @@ const orderItemDialog = reactive({
   close() {
     this.canBeShown = false;
   },
-
-  async edit() {
+  edit() {
     const { id: orderId } = dialog.item;
     const { id: orderItemId } = this.item;
     const { productModel, price, count } = orderItemDialog.form;
-
-    ({ pending: this.isSubmitLoading } = await useFetch(
-      `${apiBase}/editOrderItem/create`,
-      {
-        method: "post",
-        body: {
-          orderItemId,
-          orderId,
-          productModelId: productModel.value,
-          productId: productModel.productId,
-          weightId: productModel.weightId,
-          count,
-          price,
-        },
-      }
-    ));
-
-    table.refresh();
-    this.close();
+    const body = {
+      orderItemId,
+      orderId,
+      productModelId: productModel.value,
+      productId: productModel.productId,
+      weightId: productModel.weightId,
+      count,
+      price,
+    };
+    createEditOrderItem(body);
   },
 });
 
 watch(
   () => orderItemDialog.form.productModel,
-  value => {
+  (value) => {
     orderItemDialog.form.price = null;
     orderItemDialog.form.inventory = null;
     if (!value) return;
 
     const { categoryId, productId } = productModels.value.find(
-      x => x.value == value.value
+      (x) => x.value == value.value
     );
     orderItemDialog.form.category = categories.value.find(
-      x => x.value == categoryId
+      (x) => x.value == categoryId
     ).value;
 
     orderItemDialog.form.product = products.value.find(
-      x => x.value == productId
+      (x) => x.value == productId
     ).value;
 
     orderItemDialog.form.price = productModels.value.find(
-      x => x.value == value.value
+      (x) => x.value == value.value
     )?.price;
 
     orderItemDialog.form.inventory = productModels.value.find(
-      x => x.value == value.value
+      (x) => x.value == value.value
     )?.inventory;
   }
 );
 
 watch(
   () => orderItemDialog.form.category,
-  value => {
+  (value) => {
     const { categoryId } =
-      products.value.find(x => x.value == orderItemDialog.form.product) || {};
+      products.value.find((x) => x.value == orderItemDialog.form.product) || {};
     if (categoryId != value) orderItemDialog.form.product = null;
   }
 );
 
 watch(
   () => orderItemDialog.form.product,
-  value => {
+  (value) => {
     const { productId } =
       productModels.value.find(
-        x => x.value == orderItemDialog.form.productModel.value
+        (x) => x.value == orderItemDialog.form.productModel.value
       ) || {};
     if (productId != value) orderItemDialog.form.productModel = null;
     if (!value) return;
 
-    const { categoryId } = products.value.find(x => x.value == value);
+    const { categoryId } = products.value.find((x) => x.value == value);
     orderItemDialog.form.category = categories.value.find(
-      x => x.value == categoryId
+      (x) => x.value == categoryId
     ).value;
   }
 );
@@ -298,7 +294,7 @@ watch(
 const filteredProducts = computed(() => {
   if (!orderItemDialog.form.category) return products.value;
   return products.value?.filter(
-    x => x.categoryId == orderItemDialog.form.category
+    (x) => x.categoryId == orderItemDialog.form.category
   );
 });
 
@@ -309,12 +305,12 @@ const filteredProductModels = computed(() => {
 
   if (!orderItemDialog.form.product) {
     return productModels.value?.filter(
-      x => x.categoryId == orderItemDialog.form.category
+      (x) => x.categoryId == orderItemDialog.form.category
     );
   }
 
   return productModels.value?.filter(
-    x => x.productId == orderItemDialog.form.product
+    (x) => x.productId == orderItemDialog.form.product
   );
 });
 
@@ -340,10 +336,10 @@ function print(item) {
 
   <v-data-table
     class="border"
-    :headers="table.headers"
+    :headers="headers_order"
     :items="filteredItems"
-    :items-per-page="table.itemsPerPage"
-    :loading="table.loading"
+    :items-per-page="10"
+    :loading="isLoading_orders"
   >
     <template #headers="{ columns, isSorted, getSortIcon, toggleSort }">
       <tr class="bg-grey-lighten-3">
@@ -422,7 +418,7 @@ function print(item) {
         <v-btn
           color="amber"
           text="پست"
-          :loading="item.postLoading"
+          :loading="isLoading_deliverOrder && deliveringItemId == item.id"
           @click="postHandler(item)"
         />
 
@@ -445,6 +441,7 @@ function print(item) {
       <v-divider class="border-opacity-25" color="black" />
 
       <v-card-text>
+        {{ dialog.name }}
         <v-row>
           <v-col cols="auto">
             <data-label :value="dialog.item.fullName" />
@@ -452,7 +449,7 @@ function print(item) {
 
           <v-col
             cols="auto"
-            v-for="item in table.headers.slice(2, -3)"
+            v-for="item in headers_order.slice(2, -3)"
             :key="item.id"
           >
             <data-label
@@ -507,17 +504,6 @@ function print(item) {
 
           <template #item.row="{ index }">{{ index + 1 }}</template>
 
-          <!-- <template
-            v-for="item in dialog.table.headers"
-            #[`header.${item.key}`]="{ column }"
-          >
-            <div
-              class="fw-600 fs-15 bg-grey-lighten-3 h-100 flex align-content-center mx-n2 px-2"
-            >
-              {{ column.title }}
-            </div>
-          </template> -->
-
           <template #headers="{ columns, isSorted, getSortIcon, toggleSort }">
             <tr class="bg-grey-lighten-3">
               <template v-for="column in columns" :key="column.key">
@@ -538,14 +524,32 @@ function print(item) {
             </v-btn>
           </template>
 
+          <template
+            #item.data-table-expand="{
+              item: { alternate },
+              internalItem,
+              isExpanded,
+              toggleExpand,
+            }"
+          >
+            <v-btn
+              v-if="alternate.length > 0"
+              variant="text"
+              @click="toggleExpand(internalItem)"
+              :icon="
+                isExpanded(internalItem) ? 'mdi-chevron-up' : 'mdi-chevron-down'
+              "
+            />
+          </template>
+
           <template #expanded-row="{ item: { alternate } }">
-            <tr>
+            <tr v-for="item in alternate" :key="item.id">
               <td></td>
-              <td>{{ alternate[0].product.name }}</td>
-              <td>{{ alternate[0].weight.name }}</td>
-              <td>{{ alternate[0].count }}</td>
-              <td>{{ alternate[0].price }}</td>
-              <td>{{ alternate[0].price * alternate[0].count }}</td>
+              <td>{{ item.product.name }}</td>
+              <td>{{ item.weight.name }}</td>
+              <td>{{ item.count }}</td>
+              <td>{{ item.price }}</td>
+              <td>{{ item.price * item.count }}</td>
               <td></td>
               <td></td>
             </tr>
@@ -568,10 +572,10 @@ function print(item) {
           color="green-lighten-4"
           text="تایید"
           flat
-          :loading="dialog.item.isAcceptLoading"
+          :loading="isLoading_acceptOrder"
           @click="
             () => {
-              acceptOrder(dialog.item);
+              acceptOrder(dialog.item.id);
               dialog.close();
             }
           "
@@ -584,10 +588,10 @@ function print(item) {
           color="red-lighten-4"
           text="رد"
           flat
-          :loading="dialog.item.isRejectLoading"
+          :loading="isLoading_rejectOrder"
           @click="
             () => {
-              rejectOrder(dialog.item);
+              rejectOrder(dialog.item.id);
               dialog.close();
             }
           "
@@ -705,7 +709,7 @@ function print(item) {
             color="amber"
             text="ویرایش"
             type="submit"
-            :loading="orderItemDialog.isSubmitLoading"
+            :loading="isLoading_createEditOrderItem"
             flat
           />
 

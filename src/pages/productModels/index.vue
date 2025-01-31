@@ -1,34 +1,104 @@
 <script setup>
 import { useAppStore } from "@/stores/app";
-import { numberWithoutCommas } from "~/utils/functions";
+import {
+  areYouSure,
+  numberWithCommas,
+  toPersianNumber,
+} from "@/utils/functions";
+import axios from "@/axios";
+
+const headers_productModel = [
+  { title: "شناسه", key: "id" },
+  { title: "دسته‌بندی", key: "category" },
+  { title: "محصول", key: "product" },
+  { title: "بسته‌بندی", key: "weight" },
+  { title: "قیمت", key: "price" },
+  { title: "موجودی", key: "inventory" },
+  { title: "عملیات", key: "actions", align: "center", sortable: false },
+];
+
+const appStore = useAppStore();
 
 const {
-  public: { apiBase, urlBase },
-} = useRuntimeConfig();
-
-const { $swal } = useNuxtApp();
-const appStore = useAppStore();
-const table = reactive({
-  headers: [
-    { title: "شناسه", key: "id" },
-    { title: "دسته‌بندی", key: "category" },
-    { title: "محصول", key: "product" },
-    { title: "بسته‌بندی", key: "weight" },
-    { title: "قیمت", key: "price" },
-    { title: "موجودی", key: "inventory" },
-    { title: "عملیات", key: "actions", align: "center", sortable: false },
-  ],
-  items: [],
-  loading: false,
-  itemsPerPage: 10,
-  refresh: null,
+  data: productModels,
+  refetch: refetch_productModels,
+  isPending: isLoading_productModels,
+} = useQuery({
+  queryKey: ["productModels"],
+  queryFn: () => axios.get("productModels"),
 });
+
+const { data: categories } = useQuery({
+  queryKey: ["categories"],
+  queryFn: () => axios.get("categories"),
+  select: (items) => items.map((x) => ({ value: x.id, title: x.name })),
+});
+
+const { data: products } = useQuery({
+  queryKey: ["products"],
+  queryFn: () => axios.get("products"),
+  select: (items) => items.map((x) => ({ ...x, value: x.id, title: x.name })),
+});
+
+const { data: weights } = useQuery({
+  queryKey: ["weights"],
+  queryFn: () => axios.get("weights"),
+  select: (items) => items.map((x) => ({ value: x.id, title: x.name })),
+});
+
+const { mutate: createProductModel, isPending: isLoading_createProductModel } =
+  useMutation({
+    mutationFn: (body) => axios.post("productModels", body),
+    onSuccess: () => {
+      appStore.openAlert(0, "با موفقیت افزوده شد");
+      refetch_productModels();
+      dialog.close();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
+const { mutate: updateProductModel, isPending: isLoading_updateProductModel } =
+  useMutation({
+    mutationFn: (id, body) => axios.patch(`productModels/${id}`, body),
+    onSuccess: () => {
+      appStore.openAlert(0, "با موفقیت ویرایش شد");
+      refetch_productModels();
+      dialog.close();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
+const { mutate: deleteProductModel, isPending: isLoading_deleteProductModel } =
+  useMutation({
+    mutationFn: (id) => axios.delete(`productModels/${id}`),
+    onSuccess: () => {
+      appStore.openAlert(0, "حذف با موفقیت انجام شد");
+      refetch_productModels();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
+const deletingItemId = ref(0);
 
 const dialog = reactive({
   canBeShown: false,
   item: null,
   formRef: null,
-  submitLoading: false,
   form: {
     category: null,
     product: null,
@@ -53,129 +123,53 @@ const dialog = reactive({
   close() {
     this.canBeShown = false;
   },
-  async add() {
-    this.submitLoading = true;
-    const { error } = await useFetch(`${apiBase}/productModels/create`, {
-      method: "post",
-      body: {
-        categoryId: this.form.category,
-        productId: this.form.product,
-        weightId: this.form.weight,
-        price: this.form.price,
-        inventory: this.form.inventory,
-      },
-    });
-    this.submitLoading = false;
-
-    if (error.value) {
-      const { data } = error.value;
-      if (data.message) appStore.openAlert(2, data.message);
-      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
-      return;
-    }
-
-    appStore.openAlert(0, "با موفقیت افزوده شد");
-    table.refresh();
-    this.close();
+  add() {
+    const body = {
+      categoryId: this.form.category,
+      productId: this.form.product,
+      weightId: this.form.weight,
+      price: this.form.price,
+      inventory: this.form.inventory,
+    };
+    createProductModel(body);
   },
-  async update() {
-    this.submitLoading = true;
-    const { error } = await useFetch(
-      `${apiBase}/productModels/${this.item.id}`,
-      {
-        method: "patch",
-        body: {
-          categoryId: this.form.category,
-          productId: this.form.product,
-          weightId: this.form.weight,
-          price: numberWithoutCommas(toEnglishNumber(this.form.price)),
-          inventory: numberWithoutCommas(toEnglishNumber(this.form.inventory)),
-        },
-      }
-    );
-    this.submitLoading = false;
-
-    if (error.value) {
-      appStore.openAlert(2, "عملیات با خطا مواجه شد");
-      return;
-    }
-
-    appStore.openAlert(0, "با موفقیت ویرایش شد");
-    table.refresh();
-    this.close();
+  update() {
+    const body = {
+      categoryId: this.form.category,
+      productId: this.form.product,
+      weightId: this.form.weight,
+      price: numberWithoutCommas(toEnglishNumber(this.form.price)),
+      inventory: numberWithoutCommas(toEnglishNumber(this.form.inventory)),
+    };
+    updateProductModel(this.item.id, body);
   },
-});
-
-const { error } = ({
-  data: table.items,
-  pending: table.loading,
-  refresh: table.refresh,
-} = await useFetch(`${apiBase}/productModels`));
-
-if (error.value) table.items = [];
-else {
-  table.items.forEach(x => {
-    x.deleteLoading = false;
-  });
-}
-
-const { data: categories = [] } = await useFetch(`${apiBase}/categories`, {
-  transform: items => items.map(x => ({ value: x.id, title: x.name })),
-});
-
-const { data: products = [] } = await useFetch(`${apiBase}/products`, {
-  transform: items => items.map(x => ({ ...x, value: x.id, title: x.name })),
-});
-
-const { data: weights = [] } = await useFetch(`${apiBase}/weights`, {
-  transform: items => items.map(x => ({ value: x.id, title: x.name })),
 });
 
 async function deleteItem(item) {
-  const { isConfirmed } = await $swal.fire({
-    icon: "question",
-    text: "آیا مطمئن هستید؟",
-    confirmButtonText: "بله",
-    showCancelButton: true,
-    cancelButtonText: "خیر",
-  });
+  const { isConfirmed } = await areYouSure();
   if (!isConfirmed) return;
 
-  item.deleteLoading = true;
-  const { error } = await useFetch(
-    `${apiBase}/productModels/delete/${item.id}`,
-    {
-      method: "delete",
-    }
-  );
-  item.deleteLoading = false;
-
-  if (error.value) {
-    appStore.openAlert(2, "عملیات با خطا مواجه شد");
-    return;
-  }
-
-  appStore.openAlert(0, "حذف با موفقیت انجام شد");
-  table.refresh();
+  deletingItemId.value = item.id;
+  deleteProductModel(item.id);
 }
 
 watch(
   () => dialog.form.category,
-  value => {
+  (value) => {
     let { product } = dialog.form;
-    const { categoryId } = products.value.find(x => x.value == product) || {};
+    const { categoryId } = products.value.find((x) => x.value == product) || {};
     if (categoryId != value) dialog.form.product = null;
   }
 );
 
 watch(
   () => dialog.form.product,
-  value => {
+  (value) => {
     if (!value) return;
 
-    const { categoryId } = products.value.find(x => x.value == value);
+    const { categoryId } = products.value.find((x) => x.value == value);
     dialog.form.category = categories.value.find(
-      x => x.value == categoryId
+      (x) => x.value == categoryId
     ).value;
   }
 );
@@ -183,7 +177,7 @@ watch(
 const filteredProducts = computed(() => {
   const { category } = dialog.form;
   if (!category) return products.value;
-  return products.value?.filter(x => x.categoryId == category);
+  return products.value?.filter((x) => x.categoryId == category);
 });
 </script>
 
@@ -197,10 +191,10 @@ const filteredProducts = computed(() => {
 
   <v-data-table
     class="border"
-    :headers="table.headers"
-    :items="table.items"
-    :items-per-page="table.itemsPerPage"
-    :loading="table.loading"
+    :headers="headers_productModel"
+    :items="productModels"
+    :items-per-page="10"
+    :loading="isLoading_productModels"
   >
     <template #item="{ item }">
       <tr :class="{ 'bg-red-lighten-4': item.inventory < 10 }">
@@ -222,7 +216,9 @@ const filteredProducts = computed(() => {
               class="mx-1"
               text="حذف"
               color="error"
-              :loading="item.deleteLoading"
+              :loading="
+                isLoading_deleteProductModel && deletingItemId == item.id
+              "
               @click="deleteItem(item)"
             />
           </div>
@@ -316,7 +312,9 @@ const filteredProducts = computed(() => {
             min-width="100"
             color="primary"
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
-            :loading="dialog.submitLoading"
+            :loading="
+              isLoading_createProductModel || isLoading_updateProductModel
+            "
           />
 
           <v-btn
