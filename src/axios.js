@@ -2,7 +2,8 @@ import axios from "axios";
 import router from "./router";
 import { useAuthStore } from "./stores/auth";
 
-const baseURL = "http://localhost:5000/admin";
+// const baseURL = "http://localhost:5000/admin";
+const baseURL = "https://maze-back-node.vercel.app/admin";
 
 const axiosInstance = axios.create({
   baseURL,
