@@ -38,7 +38,12 @@ const {
 
 const { mutate: createCategory, isPending: isLoading_createCategory } =
   useMutation({
-    mutationFn: (body) => axios.post("categories", body),
+    mutationFn: (body) =>
+      axios.post("categories", body, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت افزوده شد");
       refetch_categories();
@@ -157,7 +162,7 @@ const dialog = reactive({
   add() {
     const formData = new FormData();
     formData.append("name", this.form.name);
-    formData.append("image", this.form.image[0]);
+    formData.append("image", this.form.image);
     createCategory(formData);
   },
   update() {
