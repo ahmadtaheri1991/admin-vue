@@ -38,12 +38,7 @@ const {
 
 const { mutate: createCategory, isPending: isLoading_createCategory } =
   useMutation({
-    mutationFn: (body) =>
-      axios.post("categories", body, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }),
+    mutationFn: (body) => axios.post("categories", body),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت افزوده شد");
       refetch_categories();

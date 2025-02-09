@@ -2,13 +2,12 @@ import axios from "axios";
 import router from "./router";
 import { useAuthStore } from "./stores/auth";
 
-// const baseURL = "http://localhost:5000/admin";
-const baseURL = "https://maze-back-node.vercel.app/admin";
+const baseURL = import.meta.env.VITE_API_URL;
 
 const axiosInstance = axios.create({
   baseURL,
   timeout: 10000,
-  headers: { "Content-Type": "application/json" },
+  // headers: { "Content-Type": "application/json" },
 });
 
 axiosInstance.interceptors.request.use(
