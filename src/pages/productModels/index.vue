@@ -6,6 +6,7 @@ import {
   toPersianNumber,
 } from "@/utils/functions";
 import axios from "@/axios";
+import { required } from "@/utils/formRules";
 
 const headers_productModel = [
   { title: "شناسه", key: "id" },
@@ -64,7 +65,7 @@ const { mutate: createProductModel, isPending: isLoading_createProductModel } =
 
 const { mutate: updateProductModel, isPending: isLoading_updateProductModel } =
   useMutation({
-    mutationFn: (id, body) => axios.patch(`productModels/${id}`, body),
+    mutationFn: ({ id, body }) => axios.patch(`productModels/${id}`, body),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت ویرایش شد");
       refetch_productModels();
@@ -141,7 +142,7 @@ const dialog = reactive({
       price: numberWithoutCommas(toEnglishNumber(this.form.price)),
       inventory: numberWithoutCommas(toEnglishNumber(this.form.inventory)),
     };
-    updateProductModel(this.item.id, body);
+    updateProductModel({ id: this.item.id, body });
   },
 });
 
@@ -243,7 +244,6 @@ const filteredProducts = computed(() => {
           <v-row>
             <v-col cols="12" sm="6" md="4">
               <v-select
-                :disabled="dialog.item"
                 v-model="dialog.form.category"
                 :items="categories"
                 label="دسته بندی"
@@ -255,7 +255,6 @@ const filteredProducts = computed(() => {
 
             <v-col cols="12" sm="6" md="4">
               <v-select
-                :disabled="dialog.item"
                 v-model="dialog.form.product"
                 :items="filteredProducts"
                 label="محصول"
@@ -267,7 +266,6 @@ const filteredProducts = computed(() => {
 
             <v-col cols="12" sm="6" md="4">
               <v-select
-                :disabled="dialog.item"
                 v-model="dialog.form.weight"
                 :items="weights"
                 label="بسته‌بندی"

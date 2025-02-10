@@ -1,6 +1,7 @@
 <script setup>
 import { areYouSure, toPersianDigit } from "@/utils/functions";
 import axios from "@/axios";
+import { required } from "@/utils/formRules";
 import { nextTick } from "vue";
 
 const statusColors = {

@@ -3,6 +3,7 @@ import { useAppStore } from "@/stores/app";
 import { areYouSure } from "@/utils/functions";
 import { useMutation, useQuery } from "@tanstack/vue-query";
 import axios from "@/axios";
+import { required } from "@/utils/formRules";
 
 const headers_product = [
   { title: "شناسه", key: "id" },
@@ -40,7 +41,7 @@ const { mutate: createWeight, isPending: isLoading_createWeight } = useMutation(
 
 const { mutate: updateWeight, isPending: isLoading_updateWeight } = useMutation(
   {
-    mutationFn: (id, body) => axios.patch(`weights/${id}`, body),
+    mutationFn: ({ id, body }) => axios.patch(`weights/${id}`, body),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت ویرایش شد");
       refetch_products();
@@ -98,7 +99,7 @@ const dialog = reactive({
   },
   async update() {
     const body = { name: this.form.name };
-    updateWeight(this.item.id, body);
+    updateWeight({ id: this.item.id, body });
   },
 });
 
@@ -128,6 +129,13 @@ async function deleteItem(item) {
   >
     <template #item.actions="{ item }">
       <div class="d-flex justify-center">
+        <v-btn
+          class="mx-1"
+          text="ویرایش"
+          color="warning"
+          @click="dialog.open(item)"
+        />
+
         <v-btn
           class="mx-1"
           text="حذف"

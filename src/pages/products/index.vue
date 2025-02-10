@@ -2,6 +2,7 @@
 import { useAppStore } from "@/stores/app";
 import { areYouSure } from "@/utils/functions";
 import axios from "@/axios";
+import { required, requiredArray } from "@/utils/formRules";
 
 const headers_product = [
   { title: "شناسه", key: "id" },
@@ -70,7 +71,7 @@ const { mutate: createProduct, isPending: isLoading_createProduct } =
 
 const { mutate: updateProduct, isPending: isLoading_updateProduct } =
   useMutation({
-    mutationFn: (id, body) => axios.patch(`products/${id}`, body),
+    mutationFn: ({ id, body }) => axios.patch(`products/${id}`, body),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت ویرایش شد");
       refetch_products();
@@ -117,7 +118,7 @@ const { mutate: createProductModel, isPending: isLoading_createProductModel } =
 
 const { mutate: updateProductModel, isPending: isLoading_updateProductModel } =
   useMutation({
-    mutationFn: (id, body) => axios.patch(`productModels/${id}`, body),
+    mutationFn: ({ id, body }) => axios.patch(`productModels/${id}`, body),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت ویرایش شد");
       productModelSection.clear();
@@ -155,7 +156,7 @@ const dialog = reactive({
   form: {
     name: "",
     category: null,
-    coverImage: [],
+    coverImage: null,
     images: [],
     description: "",
   },
@@ -164,7 +165,7 @@ const dialog = reactive({
     this.item = null;
     await nextTick();
     this.formRef?.reset();
-    this.form.coverImage = [];
+    this.form.coverImage = null;
     this.form.images = [];
     if (item) {
       this.item = item;
@@ -181,7 +182,7 @@ const dialog = reactive({
     formData.append("name", this.form.name);
     formData.append("categoryId", this.form.category);
     formData.append("description", this.form.description);
-    formData.append("image", this.form.coverImage[0]);
+    formData.append("image", this.form.coverImage);
     this.form.images.forEach((image) => {
       formData.append("gallery", image);
     });
@@ -193,11 +194,16 @@ const dialog = reactive({
     formData.append("name", this.form.name);
     formData.append("categoryId", this.form.category);
     formData.append("description", this.form.description);
-    if (this.form.images.length) formData.append("gallery", this.form.images);
-    if (this.form.coverImage.length)
-      formData.append("image", this.form.coverImage[0]);
+    if (this.form.images.length) {
+      this.form.images.forEach((image) => {
+        formData.append("gallery", image);
+      });
+    }
+    if (this.form.coverImage?.name) {
+      formData.append("image", this.form.coverImage);
+    }
 
-    updateProduct(this.item.id, formData);
+    updateProduct({ id: this.item.id, body: formData });
   },
 });
 
@@ -244,7 +250,7 @@ const productModelSection = reactive({
       price: this.form.price,
       inventory: this.form.inventory,
     };
-    updateProductModel(this.item.id, body);
+    updateProductModel({ id: this.item.id, body });
   },
   clear() {
     this.item = null;
@@ -349,7 +355,6 @@ function addProductModelHandler(item) {
           <v-row>
             <v-col cols="12" sm="6" md="4">
               <v-select
-                :disabled="productModelSection.item"
                 v-model="productModelSection.form.weight"
                 :items="weights"
                 label="بسته‌بندی"
@@ -462,7 +467,6 @@ function addProductModelHandler(item) {
           <v-row>
             <v-col cols="12" sm="6" md="4">
               <v-text-field
-                :disabled="dialog.item"
                 v-model="dialog.form.name"
                 label="نام محصول"
                 variant="outlined"
@@ -472,7 +476,6 @@ function addProductModelHandler(item) {
 
             <v-col cols="12" sm="6" md="4">
               <v-select
-                :disabled="dialog.item"
                 v-model="dialog.form.category"
                 :items="categories"
                 label="دسته بندی"

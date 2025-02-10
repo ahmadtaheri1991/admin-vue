@@ -1,6 +1,7 @@
 <script setup>
 import axios from "@/axios";
 import { areYouSure } from "@/utils/functions";
+import { required, requiredArray } from "@/utils/formRules";
 
 const headers_category = [
   { title: "شناسه", key: "id" },
@@ -54,7 +55,9 @@ const { mutate: createCategory, isPending: isLoading_createCategory } =
 
 const { mutate: updateCategory, isPending: isLoading_updateCategory } =
   useMutation({
-    mutationFn: (id, body) => axios.patch(`categories/${id}`, body),
+    mutationFn: ({ id, body }) => {
+      return axios.patch(`categories/${id}`, body);
+    },
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت ویرایش شد");
       refetch_categories();
@@ -101,7 +104,7 @@ const { mutate: createProduct, isPending: isLoading_createProduct } =
 
 const { mutate: updateProduct, isPending: isLoading_updateProduct } =
   useMutation({
-    mutationFn: (id, body) => axios.patch(`products/${id}`, body),
+    mutationFn: ({ id, body }) => axios.patch(`products/${id}`, body),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت ویرایش شد");
       productSection.clear();
@@ -138,14 +141,14 @@ const dialog = reactive({
   formRef: null,
   form: {
     name: "",
-    image: [],
+    image: null,
   },
   async open(item) {
     this.canBeShown = true;
     this.item = null;
     await nextTick();
     this.formRef?.reset();
-    this.form.image = [];
+    this.form.image = null;
     if (item) {
       this.item = item;
       this.form.name = item.name;
@@ -163,8 +166,8 @@ const dialog = reactive({
   update() {
     const formData = new FormData();
     formData.append("name", this.form.name);
-    if (this.form.image.length) formData.append("image", this.form.image[0]);
-    updateCategory(this.item.id, formData);
+    if (this.form.image?.name) formData.append("image", this.form.image);
+    updateCategory({ id: this.item.id, body: formData });
   },
 });
 
@@ -175,7 +178,7 @@ const productSection = reactive({
   form: {
     name: "",
     category: null,
-    coverImage: [],
+    coverImage: null,
     images: [],
     description: "",
   },
@@ -184,7 +187,7 @@ const productSection = reactive({
     this.item = null;
     await nextTick();
     this.formRef?.reset();
-    this.form.coverImage = [];
+    this.form.coverImage = null;
     this.form.images = [];
     if (item) {
       this.item = item;
@@ -198,7 +201,7 @@ const productSection = reactive({
     formData.append("name", this.form.name);
     formData.append("categoryId", selectedCat.value.id);
     formData.append("description", this.form.description);
-    formData.append("image", this.form.coverImage[0]);
+    formData.append("image", this.form.coverImage);
     this.form.images.forEach((image) => {
       formData.append("gallery", image);
     });
@@ -211,15 +214,15 @@ const productSection = reactive({
     formData.append("categoryId", this.form.category);
     formData.append("description", this.form.description);
     if (this.form.images.length) formData.append("gallery", this.form.images);
-    if (this.form.coverImage.length)
-      formData.append("image", this.form.coverImage[0]);
+    if (this.form.coverImage?.name)
+      formData.append("image", this.form.coverImage);
 
-    updateProduct(this.item.id, formData);
+    updateProduct({ id: this.item.id, body: formData });
   },
   clear() {
     this.item = null;
     this.formRef?.reset();
-    this.form.coverImage = [];
+    this.form.coverImage = null;
     this.form.images = [];
   },
 });
@@ -314,7 +317,6 @@ function addProductHandler(item) {
           <v-row>
             <v-col cols="12" sm="6" md="4">
               <v-text-field
-                :disabled="productSection.item"
                 v-model="productSection.form.name"
                 label="نام محصول"
                 variant="outlined"
@@ -429,7 +431,6 @@ function addProductHandler(item) {
           <v-row>
             <v-col cols="12">
               <v-text-field
-                :disabled="dialog.item"
                 v-model="dialog.form.name"
                 label="نام دسته‌بندی"
                 variant="outlined"
