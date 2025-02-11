@@ -29,18 +29,30 @@ const vuetify = createVuetify({
       hideDetails: "auto",
     },
     VTextField: {
+      rounded: "12",
       variant: "outlined",
+      flat: true,
+    },
+    VFileInput: {
+      rounded: "12",
+      variant: "outlined",
+      flat: true,
     },
     VBtn: {
       color: "primary",
+      flat: true,
+      rounded: "12",
     },
     VDataTable: {
       hover: true,
-
+      class: "rounded-14 pa-4",
       VBtn: {
         flat: true,
         size: "small",
       },
+    },
+    VCard: {
+      rounded: "14",
     },
   },
   components,

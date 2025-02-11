@@ -262,6 +262,7 @@ function addProductHandler(item) {
 
     <v-data-table
       class="border"
+      density="compact"
       :headers="headers_category"
       :items="categories"
       :items-per-page="10"
@@ -270,18 +271,21 @@ function addProductHandler(item) {
       <template #item.actions="{ item }">
         <div class="d-flex justify-center">
           <v-btn
+            size="small"
             class="mx-1"
             text="افزودن محصول"
             color="primary"
             @click="addProductHandler(item)"
           />
           <v-btn
+            size="small"
             class="mx-1"
             text="ویرایش"
             color="warning"
             @click="dialog.open(item)"
           />
           <v-btn
+            size="small"
             class="mx-1"
             text="حذف"
             color="error"
@@ -421,19 +425,23 @@ function addProductHandler(item) {
         v-model="dialog.formRef"
         @valid="dialog.item ? dialog.update() : dialog.add()"
       >
-        <v-card-title style="height: 50px" class="bg-grey-lighten-3">{{
-          dialog.item ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی"
-        }}</v-card-title>
+        <v-card-title
+          style="height: 60px"
+          class="py-4 px-6 fs-18"
+          color="#11181C"
+          >{{
+            dialog.item ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی"
+          }}</v-card-title
+        >
 
-        <v-divider class="border-opacity-25" color="black" />
+        <!-- <v-divider class="border-opacity-25" color="black" /> -->
 
-        <v-card-text>
+        <v-card-text class="py-2 px-6">
           <v-row>
             <v-col cols="12">
               <v-text-field
                 v-model="dialog.form.name"
                 label="نام دسته‌بندی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -450,28 +458,31 @@ function addProductHandler(item) {
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
+        <!-- <v-divider class="border-opacity-25" color="black" /> -->
 
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-6 py-4 flex-wrap align-center"
         >
           <v-spacer />
 
           <v-btn
-            class="ml-2"
-            type="submit"
-            min-width="100"
-            color="primary"
-            :text="dialog.item ? 'ویرایش' : 'افزودن'"
-            :loading="isLoading_createCategory || isLoading_updateCategory"
-          />
-
-          <v-btn
-            min-width="100"
+            min-width="80"
+            height="40"
+            variant="tonal"
             color="error"
             text="لغو"
             @click="dialog.close()"
+          />
+
+          <v-btn
+            class="mr-2"
+            height="40"
+            type="submit"
+            min-width="80"
+            color="primary"
+            :text="dialog.item ? 'ویرایش' : 'افزودن'"
+            :loading="isLoading_createCategory || isLoading_updateCategory"
           />
         </div>
       </custom-form>
