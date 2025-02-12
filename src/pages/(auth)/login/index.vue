@@ -47,11 +47,13 @@ function login() {
   </div>
 
   <v-card class="mx-auto mt-10" max-width="500">
-    <v-card-title class="bg-grey-lighten-3">ورود به پنل مدیریت</v-card-title>
+    <v-card-title class="height-60 py-4 px-6 fs-18" color="#11181C">
+      ورود به پنل مدیریت
+    </v-card-title>
 
-    <v-divider class="border-opacity-25" color="black" />
+    <!-- <v-divider class="border-opacity-25" color="black" /> -->
 
-    <v-card-text class="mt-2">
+    <v-card-text class="py-2 px-6">
       <custom-form @valid="login">
         <v-row>
           <v-col cols="12">
@@ -74,17 +76,19 @@ function login() {
               :rules="[required]"
             />
           </v-col>
-
-          <v-col>
-            <v-btn
-              :loading="isPending"
-              class="mr-auto d-block"
-              type="submit"
-              text="ورود"
-            />
-          </v-col>
         </v-row>
       </custom-form>
     </v-card-text>
+
+    <div style="height: 72px" class="d-flex px-6 py-4 flex-wrap align-center">
+      <v-spacer />
+
+      <v-btn
+        :loading="isPending"
+        class="mr-auto d-block"
+        type="submit"
+        text="ورود"
+      />
+    </div>
   </v-card>
 </template>
