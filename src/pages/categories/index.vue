@@ -3,6 +3,19 @@ import axios from "@/axios";
 import { areYouSure } from "@/utils/functions";
 import { required, requiredArray } from "@/utils/formRules";
 
+import { ref } from "vue";
+import vueFilePond from "vue-filepond";
+import "filepond/dist/filepond.min.css";
+import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css";
+import FilePondPluginImagePreview from "filepond-plugin-image-preview";
+import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
+
+// Create FilePond component
+const FilePond = vueFilePond(
+  FilePondPluginImagePreview,
+  FilePondPluginFileValidateType
+);
+
 const headers_category = [
   { title: "شناسه", key: "id" },
   { title: "نام", key: "name" },
@@ -18,6 +31,30 @@ const headers_product = [
 
 const appStore = useAppStore();
 const showProduct = ref(false);
+
+const pond = ref(null);
+const files = ref([]);
+const acceptedFileTypes = ["image/jpeg", "image/png"];
+
+const handleFilePondInit = () => {
+  console.log("FilePond has initialized");
+};
+
+const handleFilePondAddFile = (error, file) => {
+  if (error) {
+    console.error("Error adding file", error);
+    return;
+  }
+  console.log("File added", file);
+};
+
+const handleFilePondRemoveFile = (error, file) => {
+  if (error) {
+    console.error("Error removing file", error);
+    return;
+  }
+  console.log("File removed", file);
+};
 
 const {
   data: categories,
@@ -435,6 +472,18 @@ function addProductHandler(item) {
                 label="نام دسته‌بندی"
                 variant="outlined"
                 :rules="[required]"
+              />
+            </v-col>
+
+            <v-col cols="12">
+              <file-pond
+                ref="pond"
+                :accepted-file-types="acceptedFileTypes"
+                :files="files"
+                allow-multiple
+                @init="handleFilePondInit"
+                @addfile="handleFilePondAddFile"
+                @removefile="handleFilePondRemoveFile"
               />
             </v-col>
 
