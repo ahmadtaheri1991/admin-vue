@@ -56,7 +56,12 @@ p {
   width: 100px;
 }
 
-.filepond--item {
+.grid .filepond--item {
   width: calc(33% - 0.5em);
   height: 100%;
+}
+
+.error .filepond--drop-label {
+  border: 1px solid #b00020;
+  border-radius: 0.5em;
 }

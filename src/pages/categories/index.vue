@@ -36,16 +36,17 @@ const pond = ref(null);
 const files = ref([]);
 const acceptedFileTypes = ["image/jpeg", "image/png"];
 
-const handleFilePondInit = () => {
-  console.log("FilePond has initialized");
-};
+// const handleFilePondInit = () => {
 
-const handleFilePondAddFile = (error, file) => {
+// };
+
+const handleFilePondAddFile = (error, { file }) => {
   if (error) {
     console.error("Error adding file", error);
     return;
   }
-  console.log("File added", file);
+  isImageTouched.value = true;
+  dialog.form.image = file;
 };
 
 const handleFilePondRemoveFile = (error, file) => {
@@ -53,7 +54,7 @@ const handleFilePondRemoveFile = (error, file) => {
     console.error("Error removing file", error);
     return;
   }
-  console.log("File removed", file);
+  dialog.form.image = null;
 };
 
 const {
@@ -172,6 +173,7 @@ const { mutate: deleteProduct, isPending: isLoading_deleteProduct } =
 
 const deletingItemId = ref(0);
 
+const isImageTouched = ref(false);
 const dialog = reactive({
   canBeShown: false,
   item: null,
@@ -189,12 +191,16 @@ const dialog = reactive({
     if (item) {
       this.item = item;
       this.form.name = item.name;
+      files.value = [item.imageUrl];
+    } else {
+      files.value = [];
     }
   },
   close() {
     this.canBeShown = false;
   },
   add() {
+    if (!this.form.image) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
     formData.append("image", this.form.image);
@@ -207,6 +213,20 @@ const dialog = reactive({
     updateCategory({ id: this.item.id, body: formData });
   },
 });
+
+watch(
+  () => dialog.canBeShown,
+  (val) => {
+    if (!val) isImageTouched.value = false;
+  }
+);
+
+watch(
+  () => dialog.form.image,
+  (val) => {
+    console.log(val);
+  }
+);
 
 const productSection = reactive({
   canBeShown: false,
@@ -477,17 +497,25 @@ function addProductHandler(item) {
 
             <v-col cols="12">
               <file-pond
+                :class="{ error: dialog.form.image == null && isImageTouched }"
                 ref="pond"
+                :credits="false"
                 :accepted-file-types="acceptedFileTypes"
                 :files="files"
-                allow-multiple
+                label-idle="تصویر"
                 @init="handleFilePondInit"
                 @addfile="handleFilePondAddFile"
                 @removefile="handleFilePondRemoveFile"
               />
+              <div
+                v-if="dialog.form.image == null && isImageTouched"
+                class="fs-12 mt-n2 mr-4 text-error"
+              >
+                الزامی
+              </div>
             </v-col>
 
-            <v-col cols="12">
+            <!-- <v-col cols="12">
               <v-file-input
                 v-model="dialog.form.image"
                 prepend-icon=""
@@ -495,7 +523,7 @@ function addProductHandler(item) {
                 variant="outlined"
                 :rules="[dialog.item ? null : requiredArray]"
               />
-            </v-col>
+            </v-col> -->
           </v-row>
         </v-card-text>
 
@@ -514,6 +542,7 @@ function addProductHandler(item) {
             color="primary"
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createCategory || isLoading_updateCategory"
+            @click="isImageTouched = true"
           />
 
           <v-btn
