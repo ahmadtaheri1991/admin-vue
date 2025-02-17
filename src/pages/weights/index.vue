@@ -130,15 +130,19 @@ async function deleteItem(item) {
     <template #item.actions="{ item }">
       <div class="d-flex justify-center">
         <v-btn
-          class="mx-1"
-          text="ویرایش"
+          icon="mdi-pencil"
+          variant="text"
+          rounded="full"
+          class="fs-14"
           color="warning"
           @click="dialog.open(item)"
         />
 
         <v-btn
-          class="mx-1"
-          text="حذف"
+          icon="mdi-delete"
+          variant="text"
+          rounded="full"
+          class="fs-14"
           color="error"
           :loading="isLoading_deleteWeight && deletingItemId == item.id"
           @click="deleteItem(item)"
@@ -153,11 +157,11 @@ async function deleteItem(item) {
         v-model="dialog.formRef"
         @valid="dialog.item ? dialog.update() : dialog.add()"
       >
-        <v-card-title style="height: 50px" class="bg-grey-lighten-3">{{
+        <v-card-title>{{
           dialog.item ? "ویرایش بسته‌بندی" : "افزودن بسته‌بندی"
         }}</v-card-title>
 
-        <v-divider class="border-opacity-25" color="black" />
+        <!-- <v-divider class="border-opacity-25" color="black" /> -->
 
         <v-card-text>
           <v-row>
@@ -172,28 +176,24 @@ async function deleteItem(item) {
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
+        <!-- <v-divider class="border-opacity-25" color="black" /> -->
 
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-6 py-4 flex-wrap align-center"
         >
           <v-spacer />
 
+          <v-cancel-btn @click="dialog.close()" />
+
           <v-btn
-            class="ml-2"
+            height="40"
+            class="mr-2"
             type="submit"
-            min-width="100"
+            min-width="80"
             color="primary"
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createWeight || isLoading_updateWeight"
-          />
-
-          <v-btn
-            min-width="100"
-            color="error"
-            text="لغو"
-            @click="dialog.close()"
           />
         </div>
       </custom-form>
