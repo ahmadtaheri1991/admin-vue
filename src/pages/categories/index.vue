@@ -262,7 +262,6 @@ function addProductHandler(item) {
 
     <v-data-table
       class="border"
-      density="compact"
       :headers="headers_category"
       :items="categories"
       :items-per-page="10"
@@ -310,7 +309,7 @@ function addProductHandler(item) {
       />
     </div>
 
-    <v-card class="mb-3">
+    <v-card class="mb-3" elevation="2">
       <custom-form
         v-model="productSection.formRef"
         @valid="
@@ -361,28 +360,31 @@ function addProductHandler(item) {
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
+        <!-- <v-divider class="border-opacity-25" color="black" /> -->
 
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-4 py-2 flex-wrap align-center"
         >
           <v-spacer />
 
           <v-btn
-            class="ml-2"
-            type="submit"
-            min-width="100"
-            color="primary"
-            :text="productSection.item ? 'ویرایش' : 'افزودن'"
-            :loading="isLoading_createProduct || isLoading_updateProduct"
+            color="error"
+            min-width="80"
+            height="40"
+            variant="tonal"
+            text="لغو"
+            @click="productSection.clear()"
           />
 
           <v-btn
-            min-width="100"
-            color="error"
-            text="لغو"
-            @click="productSection.clear()"
+            height="40"
+            min-width="80"
+            color="primary"
+            class="mr-2"
+            type="submit"
+            :text="productSection.item ? 'ویرایش' : 'افزودن'"
+            :loading="isLoading_createProduct || isLoading_updateProduct"
           />
         </div>
       </custom-form>
@@ -425,14 +427,9 @@ function addProductHandler(item) {
         v-model="dialog.formRef"
         @valid="dialog.item ? dialog.update() : dialog.add()"
       >
-        <v-card-title
-          style="height: 60px"
-          class="py-4 px-6 fs-18"
-          color="#11181C"
-          >{{
-            dialog.item ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی"
-          }}</v-card-title
-        >
+        <v-card-title>{{
+          dialog.item ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی"
+        }}</v-card-title>
 
         <!-- <v-divider class="border-opacity-25" color="black" /> -->
 
