@@ -41,7 +41,7 @@ async function showSwal() {
         <v-list-item link to="/products" title="محصولات" />
         <v-list-item link to="/productModels" title="مدل محصولات" />
         <v-list-item link to="/orders" title="سفارشات" />
-        <!-- <v-list-item link to="/orders" title="در حال اتمام" /> -->
+        <v-list-item link to="/rejectedOrders" title="سفارشات ردشده" />
         <!-- <v-list-item link to="/orders" title="گزارش فروش" /> -->
         <v-list-item @click="showSwal()" title="خروج" />
       </v-navigation-drawer>
