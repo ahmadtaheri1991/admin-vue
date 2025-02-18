@@ -7,11 +7,6 @@
   letter-spacing: normal;
 }
 
-// .v-data-table.no-divider tr td,
-// th {
-//   border: none !important;
-// }
-
 .v-data-table.transparent {
   background-color: transparent !important;
 }
@@ -28,7 +23,9 @@
   }
   table {
     thead {
-      background-color: #f4f4f5;
+      tr:first-child {
+        background-color: #f4f4f5;
+      }
       tr {
         th {
           height: 40px !important;
@@ -36,9 +33,11 @@
           font-weight: 600 !important;
         }
         th:first-child {
+          border-top-right-radius: 8px;
           border-bottom-right-radius: 8px;
         }
         th:last-child {
+          border-top-left-radius: 8px;
           border-bottom-left-radius: 8px;
         }
       }
