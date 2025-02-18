@@ -41,18 +41,22 @@ function login() {
 
 <template>
   <div
-    class="bg-green-darken-4 pa-2 pt-4 width-120 height-120 mx-auto rounded-circle"
+    class="
+      bg-green-darken-4
+      pa-2
+      pt-4
+      width-120
+      height-120
+      mx-auto
+      rounded-circle
+    "
   >
     <v-img src="/images/logo-maze.png" />
   </div>
 
-  <v-card class="mx-auto mt-10" elevation="2" max-width="500">
+  <v-card class="mx-auto mt-7 border" flat max-width="500">
     <custom-form @valid="login">
-      <v-card-title class="height-60 py-4 px-6 fs-18" color="#11181C">
-        ورود به پنل مدیریت
-      </v-card-title>
-
-      <!-- <v-divider class="border-opacity-25" color="black" /> -->
+      <v-card-title> ورود به پنل مدیریت </v-card-title>
 
       <v-card-text class="py-2 px-6">
         <v-row>
@@ -82,14 +86,7 @@ function login() {
       <div style="height: 72px" class="d-flex px-6 py-4 flex-wrap align-center">
         <v-spacer />
 
-        <v-btn
-          :loading="isPending"
-          height="40"
-          width="80"
-          class="mr-auto d-block"
-          type="submit"
-          text="ورود"
-        />
+        <v-submit-btn :loading="isPending" text="ورود" />
       </div>
     </custom-form>
   </v-card>
