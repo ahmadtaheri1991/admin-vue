@@ -288,7 +288,7 @@ function addProductModelHandler(item) {
     <v-btn
       class="mb-3"
       color="primary"
-      text="افرودن محصول"
+      text="افزودن محصول"
       @click="dialog.open()"
     />
 
@@ -311,16 +311,10 @@ function addProductModelHandler(item) {
             color="primary"
             @click="addProductModelHandler(item)"
           />
-          <v-btn
-            class="mx-1"
-            text="ویرایش"
-            color="warning"
-            @click="dialog.open(item)"
-          />
-          <v-btn
-            class="mx-1"
-            text="حذف"
-            color="error"
+
+          <v-edit-btn color="warning" @click="dialog.open(item)" />
+
+          <v-delete-btn
             :loading="isLoading_deleteProduct && deletingItemId == item.id"
             @click="deleteProductItem(item)"
           />
@@ -342,7 +336,7 @@ function addProductModelHandler(item) {
       />
     </div>
 
-    <v-card class="mb-3">
+    <v-card class="mb-3" elevation="2">
       <custom-form
         v-model="productModelSection.formRef"
         @valid="
@@ -383,30 +377,19 @@ function addProductModelHandler(item) {
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
-
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-4 py-2 flex-wrap align-center"
         >
           <v-spacer />
 
-          <v-btn
-            class="ml-2"
-            type="submit"
-            min-width="100"
-            color="primary"
+          <v-cancel-btn @click="productModelSection.clear()" />
+
+          <v-submit-btn
             :text="productModelSection.item ? 'ویرایش' : 'افزودن'"
             :loading="
               isLoading_createProductModel || isLoading_updateProductModel
             "
-          />
-
-          <v-btn
-            min-width="100"
-            color="error"
-            text="لغو"
-            @click="productModelSection.clear()"
           />
         </div>
       </custom-form>
@@ -429,16 +412,9 @@ function addProductModelHandler(item) {
           <td>{{ item.inventory }}</td>
           <td>
             <div class="d-flex justify-center">
-              <v-btn
-                class="mx-1"
-                text="ویرایش"
-                color="warning"
-                @click="productModelSection.open(item)"
-              />
-              <v-btn
-                class="mx-1"
-                text="حذف"
-                color="error"
+              <v-edit-btn @click="productModelSection.open(item)" />
+
+              <v-delete-btn
                 :loading="
                   isLoading_deleteProductModel && deletingItemId == item.id
                 "
@@ -457,11 +433,9 @@ function addProductModelHandler(item) {
         v-model="dialog.formRef"
         @valid="dialog.item ? dialog.update() : dialog.add()"
       >
-        <v-card-title style="height: 50px" class="bg-grey-lighten-3">{{
+        <v-card-title>{{
           dialog.item ? "ویرایش محصول" : "افزودن محصول"
         }}</v-card-title>
-
-        <v-divider class="border-opacity-25" color="black" />
 
         <v-card-text>
           <v-row>
@@ -469,7 +443,6 @@ function addProductModelHandler(item) {
               <v-text-field
                 v-model="dialog.form.name"
                 label="نام محصول"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -479,7 +452,6 @@ function addProductModelHandler(item) {
                 v-model="dialog.form.category"
                 :items="categories"
                 label="دسته بندی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -509,35 +481,23 @@ function addProductModelHandler(item) {
               <v-textarea
                 v-model="dialog.form.description"
                 label="توضیحات"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
-
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-6 py-4 flex-wrap align-center"
         >
           <v-spacer />
 
-          <v-btn
-            class="ml-2"
-            type="submit"
-            min-width="100"
-            color="primary"
+          <v-cancel-btn @click="dialog.close()" />
+
+          <v-submit-btn
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createProduct || isLoading_updateProduct"
-          />
-
-          <v-btn
-            min-width="100"
-            color="error"
-            text="لغو"
-            @click="dialog.close()"
           />
         </div>
       </custom-form>

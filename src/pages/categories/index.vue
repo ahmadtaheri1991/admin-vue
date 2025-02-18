@@ -5,7 +5,7 @@ import { required, requiredArray } from "@/utils/formRules";
 
 const headers_category = [
   { title: "شناسه", key: "id" },
-  { title: "نام", key: "name" },
+  { title: "نام", key: "name", minWidth: 110 },
   { title: "عملیات", key: "actions", align: "center", sortable: false },
 ];
 
@@ -268,7 +268,7 @@ function addProductHandler(item) {
       :loading="isLoading_categories"
     >
       <template #item.actions="{ item }">
-        <div class="d-flex justify-center">
+        <div class="d-flex justify-center align-center">
           <v-btn
             size="small"
             class="mx-1"
@@ -276,18 +276,10 @@ function addProductHandler(item) {
             color="primary"
             @click="addProductHandler(item)"
           />
-          <v-btn
-            size="small"
-            class="mx-1"
-            text="ویرایش"
-            color="warning"
-            @click="dialog.open(item)"
-          />
-          <v-btn
-            size="small"
-            class="mx-1"
-            text="حذف"
-            color="error"
+
+          <v-edit-btn @click="dialog.open(item)" />
+
+          <v-delete-btn
             :loading="isLoading_deleteCategory && deletingItemId == item.id"
             @click="deleteCategoryItem(item)"
           />
@@ -322,7 +314,6 @@ function addProductHandler(item) {
               <v-text-field
                 v-model="productSection.form.name"
                 label="نام محصول"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -360,29 +351,15 @@ function addProductHandler(item) {
           </v-row>
         </v-card-text>
 
-        <!-- <v-divider class="border-opacity-25" color="black" /> -->
-
         <div
           style="height: 72px"
           class="d-flex px-4 py-2 flex-wrap align-center"
         >
           <v-spacer />
 
-          <v-btn
-            color="error"
-            min-width="80"
-            height="40"
-            variant="tonal"
-            text="لغو"
-            @click="productSection.clear()"
-          />
+          <v-cancel-btn @click="productSection.clear()" />
 
-          <v-btn
-            height="40"
-            min-width="80"
-            color="primary"
-            class="mr-2"
-            type="submit"
+          <v-submit-btn
             :text="productSection.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createProduct || isLoading_updateProduct"
           />
@@ -403,16 +380,9 @@ function addProductHandler(item) {
 
       <template #item.actions="{ item }">
         <div class="d-flex justify-center">
-          <v-btn
-            class="mx-1"
-            text="ویرایش"
-            color="warning"
-            @click="productSection.open(item)"
-          />
-          <v-btn
-            class="mx-1"
-            text="حذف"
-            color="error"
+          <v-edit-btn @click="productSection.open(item)" />
+
+          <v-delete-btn
             :loading="isLoading_deleteProduct && deletingItemId == item.id"
             @click="deleteProductItem(item)"
           />
@@ -431,9 +401,7 @@ function addProductHandler(item) {
           dialog.item ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی"
         }}</v-card-title>
 
-        <!-- <v-divider class="border-opacity-25" color="black" /> -->
-
-        <v-card-text class="py-2 px-6">
+        <v-card-text>
           <v-row>
             <v-col cols="12">
               <v-text-field
@@ -455,29 +423,15 @@ function addProductHandler(item) {
           </v-row>
         </v-card-text>
 
-        <!-- <v-divider class="border-opacity-25" color="black" /> -->
-
         <div
           style="height: 72px"
           class="d-flex px-6 py-4 flex-wrap align-center"
         >
           <v-spacer />
 
-          <v-btn
-            min-width="80"
-            height="40"
-            variant="tonal"
-            color="error"
-            text="لغو"
-            @click="dialog.close()"
-          />
+          <v-cancel-btn @click="dialog.close()" />
 
-          <v-btn
-            class="mr-2"
-            height="40"
-            type="submit"
-            min-width="80"
-            color="primary"
+          <v-submit-btn
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createCategory || isLoading_updateCategory"
           />

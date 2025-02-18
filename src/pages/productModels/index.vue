@@ -207,16 +207,9 @@ const filteredProducts = computed(() => {
         <td>{{ toPersianNumber(item.inventory) }}</td>
         <td>
           <div class="d-flex justify-center">
-            <v-btn
-              class="mx-1"
-              text="ویرایش"
-              color="warning"
-              @click="dialog.open(item)"
-            />
-            <v-btn
-              class="mx-1"
-              text="حذف"
-              color="error"
+            <v-edit-btn @click="dialog.open(item)" />
+
+            <v-delete-btn
               :loading="
                 isLoading_deleteProductModel && deletingItemId == item.id
               "
@@ -234,11 +227,9 @@ const filteredProducts = computed(() => {
         v-model="dialog.formRef"
         @valid="dialog.item ? dialog.update() : dialog.add()"
       >
-        <v-card-title style="height: 50px" class="bg-grey-lighten-3">{{
+        <v-card-title>{{
           dialog.item ? "ویرایش مدل محصول" : "افزودن مدل محصول"
         }}</v-card-title>
-
-        <v-divider class="border-opacity-25" color="black" />
 
         <v-card-text>
           <v-row>
@@ -247,7 +238,6 @@ const filteredProducts = computed(() => {
                 v-model="dialog.form.category"
                 :items="categories"
                 label="دسته بندی"
-                variant="outlined"
                 :rules="[required]"
                 clearable
               />
@@ -258,7 +248,6 @@ const filteredProducts = computed(() => {
                 v-model="dialog.form.product"
                 :items="filteredProducts"
                 label="محصول"
-                variant="outlined"
                 :rules="[required]"
                 clearable
               />
@@ -269,57 +258,41 @@ const filteredProducts = computed(() => {
                 v-model="dialog.form.weight"
                 :items="weights"
                 label="بسته‌بندی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
 
             <v-col cols="12" sm="6" md="4">
               <v-text-field
-                v-persian-digit
                 v-model="dialog.form.price"
                 label="قیمت"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
 
             <v-col cols="12" sm="6" md="4">
               <v-text-field
-                v-persian-digit
                 v-model="dialog.form.inventory"
                 label="موجودی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
-
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-6 py-4 flex-wrap align-center"
         >
           <v-spacer />
 
-          <v-btn
-            class="ml-2"
-            type="submit"
-            min-width="100"
-            color="primary"
+          <v-cancel-btn @click="dialog.close()" />
+
+          <v-submit-btn
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="
               isLoading_createProductModel || isLoading_updateProductModel
             "
-          />
-
-          <v-btn
-            min-width="100"
-            color="error"
-            text="لغو"
-            @click="dialog.close()"
           />
         </div>
       </custom-form>

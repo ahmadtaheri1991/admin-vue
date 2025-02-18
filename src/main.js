@@ -26,6 +26,9 @@ const vuetify = createVuetify({
   },
   aliases: {
     VCancelBtn: components.VBtn,
+    VDeleteBtn: components.VBtn,
+    VEditBtn: components.VBtn,
+    VSubmitBtn: components.VBtn,
   },
   defaults: {
     global: {
@@ -54,6 +57,31 @@ const vuetify = createVuetify({
       color: "error",
       variant: "tonal",
     },
+    VDeleteBtn: {
+      icon: "mdi-delete",
+      size: "x-small",
+      variant: "text",
+      rounded: "full",
+      color: "error",
+      class: "fs-14",
+    },
+    VEditBtn: {
+      icon: "mdi-pencil",
+      size: "x-small",
+      variant: "text",
+      rounded: "full",
+      color: "warning",
+      class: "fs-14",
+    },
+    VSubmitBtn: {
+      rounded: "12",
+      flat: true,
+      height: "40",
+      class: "mr-2",
+      type: "submit",
+      minWidth: "80",
+      color: "primary",
+    },
     VBtn: {
       color: "primary",
       flat: true,
@@ -76,10 +104,28 @@ const vuetify = createVuetify({
         class: "py-4 px-6 fs-18 height-60",
       },
       VCardText: {
-        class: "py-2 px-6",
+        class: "pa-4",
       },
     },
+    VDialog: {
+      VCard: {
+        rounded: "14",
+        VCardTitle: {
+          style: {
+            color: "#11181C",
+          },
+          class: "py-4 px-6 fs-18 height-60",
+        },
+        VCardText: {
+          class: "py-2 px-6",
+        },
+      },
+    },
+    VSelect: {
+      variant: "outlined",
+    },
   },
+
   components,
   directives,
 });

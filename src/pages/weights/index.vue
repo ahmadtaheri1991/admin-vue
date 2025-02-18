@@ -129,21 +129,9 @@ async function deleteItem(item) {
   >
     <template #item.actions="{ item }">
       <div class="d-flex justify-center">
-        <v-btn
-          icon="mdi-pencil"
-          variant="text"
-          rounded="full"
-          class="fs-14"
-          color="warning"
-          @click="dialog.open(item)"
-        />
+        <v-edit-btn @click="dialog.open(item)" />
 
-        <v-btn
-          icon="mdi-delete"
-          variant="text"
-          rounded="full"
-          class="fs-14"
-          color="error"
+        <v-delete-btn
           :loading="isLoading_deleteWeight && deletingItemId == item.id"
           @click="deleteItem(item)"
         />
@@ -161,22 +149,17 @@ async function deleteItem(item) {
           dialog.item ? "ویرایش بسته‌بندی" : "افزودن بسته‌بندی"
         }}</v-card-title>
 
-        <!-- <v-divider class="border-opacity-25" color="black" /> -->
-
         <v-card-text>
           <v-row>
             <v-col cols="12">
               <v-text-field
                 v-model="dialog.form.name"
                 label="نام بسته‌بندی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
           </v-row>
         </v-card-text>
-
-        <!-- <v-divider class="border-opacity-25" color="black" /> -->
 
         <div
           style="height: 72px"
@@ -186,12 +169,7 @@ async function deleteItem(item) {
 
           <v-cancel-btn @click="dialog.close()" />
 
-          <v-btn
-            height="40"
-            class="mr-2"
-            type="submit"
-            min-width="80"
-            color="primary"
+          <v-submit-btn
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createWeight || isLoading_updateWeight"
           />
