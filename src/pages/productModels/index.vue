@@ -4,19 +4,24 @@ import {
   areYouSure,
   numberWithCommas,
   toPersianNumber,
+  toPersianDigit,
 } from "@/utils/functions";
 import axios from "@/axios";
 import { required } from "@/utils/formRules";
 
-const headers_productModel = [
-  { title: "شناسه", key: "id" },
-  { title: "دسته‌بندی", key: "category" },
-  { title: "محصول", key: "product" },
-  { title: "بسته‌بندی", key: "weight" },
-  { title: "قیمت", key: "price" },
-  { title: "موجودی", key: "inventory" },
-  { title: "عملیات", key: "actions", align: "center", sortable: false },
-];
+const productModel = reactive({
+  headers: [
+    { title: "شناسه", key: "id" },
+    { title: "دسته‌بندی", key: "category" },
+    { title: "محصول", key: "product" },
+    { title: "بسته‌بندی", key: "weight" },
+    { title: "قیمت", key: "price" },
+    { title: "موجودی", key: "inventory" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
 const appStore = useAppStore();
 
@@ -191,11 +196,15 @@ const filteredProducts = computed(() => {
   />
 
   <v-data-table
-    class="border"
-    :headers="headers_productModel"
+    :headers="productModel.headers"
     :items="productModels"
-    :items-per-page="10"
+    :page="productModel.page"
+    :items-per-page="productModel.itemsPerPage"
+    :page-text="`صفحه ${toPersianDigit(productModel.page)} از ${toPersianDigit(
+      Math.ceil(productModels?.length / productModel.itemsPerPage)
+    )}`"
     :loading="isLoading_productModels"
+    :hide-default-footer="!productModels?.length || isLoading_productModels"
   >
     <template #item="{ item }">
       <tr :class="{ 'bg-red-lighten-4': item.inventory < 10 }">

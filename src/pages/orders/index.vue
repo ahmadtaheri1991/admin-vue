@@ -17,18 +17,27 @@ const statusTitles = {
   posted: "پست شده",
 };
 
-const headers_order = [
-  { title: "", key: "id", sortable: false, align: "center" },
-  {
-    title: "نام و نام‌خانوادگی",
-    key: "fullName",
-    minWidth: 140,
-  },
-  { title: "شماره تماس", key: "phone", minWidth: 111 },
-  { title: "زمان ثبت سفارش", key: "createdAt", align: "center", minWidth: 155 },
-  { title: "وضعیت", key: "status", align: "center" },
-  { title: "عملیات", key: "actions", align: "center", sortable: false },
-];
+const order = reactive({
+  headers: [
+    { title: "", key: "id", sortable: false, align: "center" },
+    {
+      title: "نام و نام‌خانوادگی",
+      key: "fullName",
+      minWidth: 140,
+    },
+    { title: "شماره تماس", key: "phone", minWidth: 111 },
+    {
+      title: "زمان ثبت سفارش",
+      key: "createdAt",
+      align: "center",
+      minWidth: 155,
+    },
+    { title: "وضعیت", key: "status", align: "center" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
 const filteredItems = computed(() => {
   return orders.value?.filter((x) =>
@@ -340,11 +349,15 @@ function print(item) {
   <v-text-field class="mb-2" placeholder="جستجو" v-model="search" />
 
   <v-data-table
-    class="border"
-    :headers="headers_order"
+    :headers="order.headers"
     :items="filteredItems"
-    :items-per-page="10"
+    :page="order.page"
+    :items-per-page="order.itemsPerPage"
+    :page-text="`صفحه ${toPersianDigit(order.page)} از ${toPersianDigit(
+      Math.ceil(filteredItems?.length / order.itemsPerPage)
+    )}`"
     :loading="isLoading_orders"
+    :hide-default-footer="!filteredItems?.length || isLoading_orders"
   >
     <!-- <template #headers="{ columns, isSorted, getSortIcon, toggleSort }">
       <tr class="bg-grey-lighten-3">
@@ -451,7 +464,7 @@ function print(item) {
 
           <v-col
             cols="auto"
-            v-for="item in headers_order.slice(2, -3)"
+            v-for="item in order.headers.slice(2, -3)"
             :key="item.id"
           >
             <data-label
@@ -494,12 +507,10 @@ function print(item) {
         </v-row>
 
         <v-data-table
-          class="border mt-4"
+          class="mt-4"
           :headers="dialog.table.headers"
           :items="dialog.table.items"
-          :items-per-page="dialog.table.itemsPerPage"
-          density="compact"
-          items-per-page="-1"
+          :items-per-page="-1"
           show-expand
         >
           <template #bottom></template>

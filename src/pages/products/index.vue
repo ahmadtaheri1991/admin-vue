@@ -1,25 +1,33 @@
 <script setup>
 import { useAppStore } from "@/stores/app";
-import { areYouSure } from "@/utils/functions";
+import { areYouSure, toPersianDigit } from "@/utils/functions";
 import axios from "@/axios";
 import { required, requiredArray } from "@/utils/formRules";
 
-const headers_product = [
-  { title: "شناسه", key: "id" },
-  { title: "نام", key: "name" },
-  { title: "دسته‌بندی", key: "category" },
-  { title: "عملیات", key: "actions", align: "center", sortable: false },
-];
+const product = reactive({
+  headers: [
+    { title: "شناسه", key: "id" },
+    { title: "نام", key: "name" },
+    { title: "دسته‌بندی", key: "category" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
-const headers_productModel = [
-  { title: "شناسه", key: "id" },
-  { title: "دسته‌بندی", key: "category" },
-  { title: "محصول", key: "product" },
-  { title: "بسته‌بندی", key: "weight" },
-  { title: "قیمت", key: "price" },
-  { title: "موجودی", key: "inventory" },
-  { title: "عملیات", key: "actions", align: "center", sortable: false },
-];
+const productModel = reactive({
+  headers: [
+    { title: "شناسه", key: "id" },
+    { title: "دسته‌بندی", key: "category" },
+    { title: "محصول", key: "product" },
+    { title: "بسته‌بندی", key: "weight" },
+    { title: "قیمت", key: "price" },
+    { title: "موجودی", key: "inventory" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
 const appStore = useAppStore();
 
@@ -275,6 +283,9 @@ async function deleteProductModelItem(item) {
 }
 
 const selectedProduct = ref(null);
+const productProductModels = computed(() =>
+  productModels.value.filter((x) => x.productId == selectedProduct.value.id)
+);
 const showProductModel = ref(false);
 
 function addProductModelHandler(item) {
@@ -293,11 +304,15 @@ function addProductModelHandler(item) {
     />
 
     <v-data-table
-      class="border"
-      :headers="headers_product"
+      :headers="product.headers"
       :items="products"
-      :items-per-page="10"
+      :page="product.page"
+      :items-per-page="product.itemsPerPage"
+      :page-text="`صفحه ${toPersianDigit(product.page)} از ${toPersianDigit(
+        Math.ceil(products?.length / product.itemsPerPage)
+      )}`"
       :loading="isLoading_products"
+      :hide-default-footer="!products?.length || isLoading_products"
     >
       <template #item.category="{ item }">
         {{ item.category.name }}
@@ -324,19 +339,20 @@ function addProductModelHandler(item) {
   </template>
 
   <template v-else>
-    <div class="d-flex">
-      <span>{{ selectedProduct.name }}</span>
+    <div class="d-flex align-center mb-4">
+      <span>محصول:&nbsp;</span>
+      <v-chip label :text="selectedProduct.name" />
 
       <v-btn
         append-icon="mdi-keyboard-backspace"
-        class="mb-3 mr-auto d-flex"
+        class="mr-auto d-flex"
         text="بازگشت به محصولات"
         color="primary"
         @click="showProductModel = false"
       />
     </div>
 
-    <v-card class="mb-3" elevation="2">
+    <v-card class="mb-4 border" flat>
       <custom-form
         v-model="productModelSection.formRef"
         @valid="
@@ -352,7 +368,6 @@ function addProductModelHandler(item) {
                 v-model="productModelSection.form.weight"
                 :items="weights"
                 label="بسته‌بندی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -361,7 +376,6 @@ function addProductModelHandler(item) {
               <v-text-field
                 v-model="productModelSection.form.price"
                 label="قیمت"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -370,7 +384,6 @@ function addProductModelHandler(item) {
               <v-text-field
                 v-model="productModelSection.form.inventory"
                 label="موجودی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -396,11 +409,19 @@ function addProductModelHandler(item) {
     </v-card>
 
     <v-data-table
-      class="border"
-      :headers="headers_productModel"
-      :items="productModels.filter((x) => x.productId == selectedProduct.id)"
-      :items-per-page="10"
+      :headers="productModel.headers"
+      :items="productProductModels"
+      :page="productModel.page"
+      :items-per-page="productModel.itemsPerPage"
+      :page-text="`صفحه ${toPersianDigit(
+        productModel.page
+      )} از ${toPersianDigit(
+        Math.ceil(productProductModels?.length / productModel.itemsPerPage)
+      )}`"
       :loading="isLoading_productModels"
+      :hide-default-footer="
+        !productProductModels?.length || isLoading_productModels
+      "
     >
       <template #item="{ item }">
         <tr :class="{ 'bg-red-lighten-4': item.inventory < 10 }">

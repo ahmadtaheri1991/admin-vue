@@ -1,22 +1,27 @@
 <script setup>
 import { useAppStore } from "@/stores/app";
-import { areYouSure } from "@/utils/functions";
+import { areYouSure, toPersianDigit } from "@/utils/functions";
 import { useMutation, useQuery } from "@tanstack/vue-query";
 import axios from "@/axios";
 import { required } from "@/utils/formRules";
+import { reactive } from "vue";
 
-const headers_product = [
-  { title: "شناسه", key: "id" },
-  { title: "نام", key: "name" },
-  { title: "عملیات", key: "actions", align: "center", sortable: false },
-];
+const weight = reactive({
+  headers: [
+    { title: "شناسه", key: "id" },
+    { title: "نام", key: "name" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
 const appStore = useAppStore();
 
 const {
-  data: products,
-  refetch: refetch_products,
-  isPending: isLoading_products,
+  data: weights,
+  refetch: refetch_weights,
+  isPending: isLoading_weights,
 } = useQuery({
   queryKey: ["weights"],
   queryFn: () => axios.get("weights"),
@@ -121,11 +126,15 @@ async function deleteItem(item) {
   />
 
   <v-data-table
-    class="border"
-    :headers="headers_product"
-    :items="products"
-    :items-per-page="10"
-    :loading="isLoading_products"
+    :headers="weight.headers"
+    :items="weights"
+    :page="weight.page"
+    :items-per-page="weight.itemsPerPage"
+    :page-text="`صفحه ${toPersianDigit(weight.page)} از ${toPersianDigit(
+      Math.ceil(weights?.length / weight.itemsPerPage)
+    )}`"
+    :loading="isLoading_weights"
+    :hide-default-footer="!weights?.length || isLoading_weights"
   >
     <template #item.actions="{ item }">
       <div class="d-flex justify-center">
