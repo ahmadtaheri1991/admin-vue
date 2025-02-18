@@ -88,7 +88,17 @@ const vuetify = createVuetify({
       rounded: "12",
     },
     VDataTable: {
-      class: "rounded-14 pa-4",
+      class: "rounded-14 pa-4 border",
+      itemsPerPageText: "تعداد در صفحه",
+      itemsPerPageOptions: [
+        { value: 10, title: "۱۰" },
+        { value: 25, title: "۲۵" },
+        { value: 50, title: "۵۰" },
+        { value: 100, title: "۱۰۰" },
+        { value: -1, title: "همه" },
+      ],
+      noDataText: "داده‌ای یافت نشد!",
+      loadingText: "در حال بارگذاری داده‌ها ...",
       VBtn: {
         flat: true,
         size: "small",
