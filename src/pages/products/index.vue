@@ -1,25 +1,33 @@
 <script setup>
 import { useAppStore } from "@/stores/app";
-import { areYouSure } from "@/utils/functions";
+import { areYouSure, toPersianDigit } from "@/utils/functions";
 import axios from "@/axios";
 import { required, requiredArray } from "@/utils/formRules";
 
-const headers_product = [
-  { title: "شناسه", key: "id" },
-  { title: "نام", key: "name" },
-  { title: "دسته‌بندی", key: "category" },
-  { title: "عملیات", key: "actions", align: "center", sortable: false },
-];
+const product = reactive({
+  headers: [
+    { title: "شناسه", key: "id" },
+    { title: "نام", key: "name" },
+    { title: "دسته‌بندی", key: "category" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
-const headers_productModel = [
-  { title: "شناسه", key: "id" },
-  { title: "دسته‌بندی", key: "category" },
-  { title: "محصول", key: "product" },
-  { title: "بسته‌بندی", key: "weight" },
-  { title: "قیمت", key: "price" },
-  { title: "موجودی", key: "inventory" },
-  { title: "عملیات", key: "actions", align: "center", sortable: false },
-];
+const productModel = reactive({
+  headers: [
+    { title: "شناسه", key: "id" },
+    { title: "دسته‌بندی", key: "category" },
+    { title: "محصول", key: "product" },
+    { title: "بسته‌بندی", key: "weight" },
+    { title: "قیمت", key: "price" },
+    { title: "موجودی", key: "inventory" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
 const appStore = useAppStore();
 
@@ -275,6 +283,9 @@ async function deleteProductModelItem(item) {
 }
 
 const selectedProduct = ref(null);
+const productProductModels = computed(() =>
+  productModels.value.filter((x) => x.productId == selectedProduct.value.id)
+);
 const showProductModel = ref(false);
 
 function addProductModelHandler(item) {
@@ -288,16 +299,20 @@ function addProductModelHandler(item) {
     <v-btn
       class="mb-3"
       color="primary"
-      text="افرودن محصول"
+      text="افزودن محصول"
       @click="dialog.open()"
     />
 
     <v-data-table
-      class="border"
-      :headers="headers_product"
+      :headers="product.headers"
       :items="products"
-      :items-per-page="10"
+      :page="product.page"
+      :items-per-page="product.itemsPerPage"
+      :page-text="`صفحه ${toPersianDigit(product.page)} از ${toPersianDigit(
+        Math.ceil(products?.length / product.itemsPerPage)
+      )}`"
       :loading="isLoading_products"
+      :hide-default-footer="!products?.length || isLoading_products"
     >
       <template #item.category="{ item }">
         {{ item.category.name }}
@@ -311,16 +326,10 @@ function addProductModelHandler(item) {
             color="primary"
             @click="addProductModelHandler(item)"
           />
-          <v-btn
-            class="mx-1"
-            text="ویرایش"
-            color="warning"
-            @click="dialog.open(item)"
-          />
-          <v-btn
-            class="mx-1"
-            text="حذف"
-            color="error"
+
+          <v-edit-btn color="warning" @click="dialog.open(item)" />
+
+          <v-delete-btn
             :loading="isLoading_deleteProduct && deletingItemId == item.id"
             @click="deleteProductItem(item)"
           />
@@ -330,19 +339,20 @@ function addProductModelHandler(item) {
   </template>
 
   <template v-else>
-    <div class="d-flex">
-      <span>{{ selectedProduct.name }}</span>
+    <div class="d-flex align-center mb-4">
+      <span>محصول:&nbsp;</span>
+      <v-chip label :text="selectedProduct.name" />
 
       <v-btn
         append-icon="mdi-keyboard-backspace"
-        class="mb-3 mr-auto d-flex"
+        class="mr-auto d-flex"
         text="بازگشت به محصولات"
         color="primary"
         @click="showProductModel = false"
       />
     </div>
 
-    <v-card class="mb-3">
+    <v-card class="mb-4 border" flat>
       <custom-form
         v-model="productModelSection.formRef"
         @valid="
@@ -358,7 +368,6 @@ function addProductModelHandler(item) {
                 v-model="productModelSection.form.weight"
                 :items="weights"
                 label="بسته‌بندی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -367,7 +376,6 @@ function addProductModelHandler(item) {
               <v-text-field
                 v-model="productModelSection.form.price"
                 label="قیمت"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -376,48 +384,44 @@ function addProductModelHandler(item) {
               <v-text-field
                 v-model="productModelSection.form.inventory"
                 label="موجودی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
-
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-4 py-2 flex-wrap align-center"
         >
           <v-spacer />
 
-          <v-btn
-            class="ml-2"
-            type="submit"
-            min-width="100"
-            color="primary"
+          <v-cancel-btn @click="productModelSection.clear()" />
+
+          <v-submit-btn
             :text="productModelSection.item ? 'ویرایش' : 'افزودن'"
             :loading="
               isLoading_createProductModel || isLoading_updateProductModel
             "
-          />
-
-          <v-btn
-            min-width="100"
-            color="error"
-            text="لغو"
-            @click="productModelSection.clear()"
           />
         </div>
       </custom-form>
     </v-card>
 
     <v-data-table
-      class="border"
-      :headers="headers_productModel"
-      :items="productModels.filter((x) => x.productId == selectedProduct.id)"
-      :items-per-page="10"
+      :headers="productModel.headers"
+      :items="productProductModels"
+      :page="productModel.page"
+      :items-per-page="productModel.itemsPerPage"
+      :page-text="`صفحه ${toPersianDigit(
+        productModel.page
+      )} از ${toPersianDigit(
+        Math.ceil(productProductModels?.length / productModel.itemsPerPage)
+      )}`"
       :loading="isLoading_productModels"
+      :hide-default-footer="
+        !productProductModels?.length || isLoading_productModels
+      "
     >
       <template #item="{ item }">
         <tr :class="{ 'bg-red-lighten-4': item.inventory < 10 }">
@@ -429,16 +433,9 @@ function addProductModelHandler(item) {
           <td>{{ item.inventory }}</td>
           <td>
             <div class="d-flex justify-center">
-              <v-btn
-                class="mx-1"
-                text="ویرایش"
-                color="warning"
-                @click="productModelSection.open(item)"
-              />
-              <v-btn
-                class="mx-1"
-                text="حذف"
-                color="error"
+              <v-edit-btn @click="productModelSection.open(item)" />
+
+              <v-delete-btn
                 :loading="
                   isLoading_deleteProductModel && deletingItemId == item.id
                 "
@@ -457,11 +454,9 @@ function addProductModelHandler(item) {
         v-model="dialog.formRef"
         @valid="dialog.item ? dialog.update() : dialog.add()"
       >
-        <v-card-title style="height: 50px" class="bg-grey-lighten-3">{{
+        <v-card-title>{{
           dialog.item ? "ویرایش محصول" : "افزودن محصول"
         }}</v-card-title>
-
-        <v-divider class="border-opacity-25" color="black" />
 
         <v-card-text>
           <v-row>
@@ -469,7 +464,6 @@ function addProductModelHandler(item) {
               <v-text-field
                 v-model="dialog.form.name"
                 label="نام محصول"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -479,7 +473,6 @@ function addProductModelHandler(item) {
                 v-model="dialog.form.category"
                 :items="categories"
                 label="دسته بندی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -509,35 +502,23 @@ function addProductModelHandler(item) {
               <v-textarea
                 v-model="dialog.form.description"
                 label="توضیحات"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
-
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-6 py-4 flex-wrap align-center"
         >
           <v-spacer />
 
-          <v-btn
-            class="ml-2"
-            type="submit"
-            min-width="100"
-            color="primary"
+          <v-cancel-btn @click="dialog.close()" />
+
+          <v-submit-btn
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createProduct || isLoading_updateProduct"
-          />
-
-          <v-btn
-            min-width="100"
-            color="error"
-            text="لغو"
-            @click="dialog.close()"
           />
         </div>
       </custom-form>

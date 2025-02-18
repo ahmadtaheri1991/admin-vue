@@ -17,14 +17,27 @@ const statusTitles = {
   posted: "پست شده",
 };
 
-const headers_order = [
-  { title: "", key: "id", width: 40, sortable: false, align: "center" },
-  { title: "نام و نام‌خانوادگی", key: "fullName" },
-  { title: "شماره تماس", key: "phone" },
-  { title: "زمان ثبت سفارش", key: "createdAt", align: "center" },
-  { title: "وضعیت", key: "status", align: "center" },
-  { title: "عملیات", key: "actions", align: "center" },
-];
+const order = reactive({
+  headers: [
+    { title: "", key: "id", sortable: false, align: "center" },
+    {
+      title: "نام و نام‌خانوادگی",
+      key: "fullName",
+      minWidth: 140,
+    },
+    { title: "شماره تماس", key: "phone", minWidth: 111 },
+    {
+      title: "زمان ثبت سفارش",
+      key: "createdAt",
+      align: "center",
+      minWidth: 155,
+    },
+    { title: "وضعیت", key: "status", align: "center" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
 const filteredItems = computed(() => {
   return orders.value?.filter((x) =>
@@ -114,7 +127,7 @@ const dialog = reactive({
       { title: "تعداد", key: "count" },
       { title: "قیمت واحد", key: "unitPrice" },
       { title: "قیمت کل", key: "totalPrice" },
-      { title: "عملیات", key: "actions" },
+      { title: "عملیات", key: "actions", align: "center" },
     ],
     items: [],
   },
@@ -557,6 +570,17 @@ function print(item) {
     :loading="isLoading_postedOrders"
   >
     <template #headers="{ columns, toggleSort }">
+    :headers="order.headers"
+    :items="filteredItems"
+    :page="order.page"
+    :items-per-page="order.itemsPerPage"
+    :page-text="`صفحه ${toPersianDigit(order.page)} از ${toPersianDigit(
+      Math.ceil(filteredItems?.length / order.itemsPerPage)
+    )}`"
+    :loading="isLoading_orders"
+    :hide-default-footer="!filteredItems?.length || isLoading_orders"
+  >
+    <!-- <template #headers="{ columns, isSorted, getSortIcon, toggleSort }">
       <tr class="bg-grey-lighten-3">
         <template v-for="column in columns" :key="column.key">
           <th :class="{ 'text-center': column.align == 'center' }">
@@ -566,7 +590,7 @@ function print(item) {
           </th>
         </template>
       </tr>
-    </template>
+    </template> -->
 
     <template #item.id="{ item }">
       {{ toPersianDigit(item.id) }}
@@ -649,11 +673,7 @@ function print(item) {
 
   <v-dialog v-model="dialog.canBeShown">
     <v-card min-height="500px">
-      <v-card-title style="height: 50px" class="bg-grey-lighten-3">
-        جزئیات سفارش {{ dialog.item.id }}
-      </v-card-title>
-
-      <v-divider class="border-opacity-25" color="black" />
+      <v-card-title> جزئیات سفارش {{ dialog.item.id }} </v-card-title>
 
       <v-card-text>
         {{ dialog.name }}
@@ -664,7 +684,7 @@ function print(item) {
 
           <v-col
             cols="auto"
-            v-for="item in headers_order.slice(2, -3)"
+            v-for="item in order.headers.slice(2, -3)"
             :key="item.id"
           >
             <data-label
@@ -707,12 +727,10 @@ function print(item) {
         </v-row>
 
         <v-data-table
-          class="border mt-4"
+          class="mt-4"
           :headers="dialog.table.headers"
           :items="dialog.table.items"
-          :items-per-page="dialog.table.itemsPerPage"
-          density="compact"
-          items-per-page="-1"
+          :items-per-page="-1"
           show-expand
         >
           <template #bottom></template>
@@ -734,9 +752,7 @@ function print(item) {
           </template>
 
           <template #item.actions="{ item }">
-            <v-btn color="primary" @click="orderItemDialog.open(item)">
-              ویرایش
-            </v-btn>
+            <v-edit-btn @click="orderItemDialog.open(item)" />
           </template>
 
           <template
@@ -772,18 +788,13 @@ function print(item) {
         </v-data-table>
       </v-card-text>
 
-      <v-divider class="border-opacity-25" color="black" />
-
-      <div
-        style="height: 50px"
-        class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
-      >
+      <div style="height: 72px" class="d-flex px-6 py-4 flex-wrap align-center">
         <v-spacer />
 
         <v-btn
           v-if="['pending', 'rejected'].includes(dialog.item.status)"
-          size="small"
-          class="mx-2"
+          height="40"
+          min-width="80"
           color="green-lighten-4"
           text="تایید"
           flat
@@ -798,8 +809,9 @@ function print(item) {
 
         <v-btn
           v-if="['pending', 'preparation'].includes(dialog.item.status)"
-          size="small"
-          class="mx-2"
+          height="40"
+          min-width="80"
+          class="mr-2"
           color="red-lighten-4"
           text="رد"
           flat
@@ -813,8 +825,9 @@ function print(item) {
         />
 
         <v-btn
-          size="small"
-          class="mx-2"
+          height="40"
+          min-width="80"
+          class="mr-2"
           color="primary"
           text="بستن"
           flat
@@ -826,11 +839,7 @@ function print(item) {
 
   <v-dialog width="95vw" max-width="900" v-model="orderItemDialog.canBeShown">
     <v-card>
-      <v-card-title style="height: 50px" class="bg-grey-lighten-3">
-        ویرایش آیتم سفارش
-      </v-card-title>
-
-      <v-divider class="border-opacity-25" color="black" />
+      <v-card-title> ویرایش آیتم سفارش </v-card-title>
 
       <custom-form
         v-model="orderItemDialog.formRef"
@@ -843,7 +852,6 @@ function print(item) {
                 v-model="orderItemDialog.form.category"
                 :items="categories"
                 label="دسته بندی"
-                variant="outlined"
                 :rules="[required]"
                 clearable
               />
@@ -854,7 +862,6 @@ function print(item) {
                 v-model="orderItemDialog.form.product"
                 :items="filteredProducts"
                 label="محصول"
-                variant="outlined"
                 :rules="[required]"
                 clearable
               />
@@ -865,7 +872,6 @@ function print(item) {
                 v-model="orderItemDialog.form.productModel"
                 :items="filteredProductModels"
                 label="مدل محصول"
-                variant="outlined"
                 :rules="[required]"
                 clearable
                 return-object
@@ -877,7 +883,6 @@ function print(item) {
                 readonly
                 v-model="orderItemDialog.form.price"
                 label="قیمت"
-                variant="outlined"
               />
             </v-col>
 
@@ -885,7 +890,6 @@ function print(item) {
               <v-text-field
                 v-model="orderItemDialog.form.count"
                 label="تعداد"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -895,7 +899,6 @@ function print(item) {
                 readonly
                 v-model="orderItemDialog.form.totalPrice"
                 label="قیمت کل"
-                variant="outlined"
               />
             </v-col>
 
@@ -904,37 +907,22 @@ function print(item) {
                 readonly
                 v-model="orderItemDialog.form.inventory"
                 label="موجودی"
-                variant="outlined"
               />
             </v-col>
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
-
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-6 py-4 flex-wrap align-center"
         >
           <v-spacer />
 
-          <v-btn
-            size="small"
-            class="mx-2"
-            color="amber"
-            text="ویرایش"
-            type="submit"
-            :loading="isLoading_createEditOrderItem"
-            flat
-          />
+          <v-cancel-btn @click="orderItemDialog.close()" />
 
-          <v-btn
-            size="small"
-            class="mx-2"
-            color="error"
-            text="لغو"
-            flat
-            @click="orderItemDialog.close()"
+          <v-submit-btn
+            text="ویرایش"
+            :loading="isLoading_createEditOrderItem"
           />
         </div>
       </custom-form>

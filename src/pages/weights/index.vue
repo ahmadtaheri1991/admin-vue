@@ -1,22 +1,27 @@
 <script setup>
 import { useAppStore } from "@/stores/app";
-import { areYouSure } from "@/utils/functions";
+import { areYouSure, toPersianDigit } from "@/utils/functions";
 import { useMutation, useQuery } from "@tanstack/vue-query";
 import axios from "@/axios";
 import { required } from "@/utils/formRules";
+import { reactive } from "vue";
 
-const headers_product = [
-  { title: "شناسه", key: "id" },
-  { title: "نام", key: "name" },
-  { title: "عملیات", key: "actions", align: "center", sortable: false },
-];
+const weight = reactive({
+  headers: [
+    { title: "شناسه", key: "id" },
+    { title: "نام", key: "name" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
 const appStore = useAppStore();
 
 const {
-  data: products,
-  refetch: refetch_products,
-  isPending: isLoading_products,
+  data: weights,
+  refetch: refetch_weights,
+  isPending: isLoading_weights,
 } = useQuery({
   queryKey: ["weights"],
   queryFn: () => axios.get("weights"),
@@ -121,25 +126,21 @@ async function deleteItem(item) {
   />
 
   <v-data-table
-    class="border"
-    :headers="headers_product"
-    :items="products"
-    :items-per-page="10"
-    :loading="isLoading_products"
+    :headers="weight.headers"
+    :items="weights"
+    :page="weight.page"
+    :items-per-page="weight.itemsPerPage"
+    :page-text="`صفحه ${toPersianDigit(weight.page)} از ${toPersianDigit(
+      Math.ceil(weights?.length / weight.itemsPerPage)
+    )}`"
+    :loading="isLoading_weights"
+    :hide-default-footer="!weights?.length || isLoading_weights"
   >
     <template #item.actions="{ item }">
       <div class="d-flex justify-center">
-        <v-btn
-          class="mx-1"
-          text="ویرایش"
-          color="warning"
-          @click="dialog.open(item)"
-        />
+        <v-edit-btn @click="dialog.open(item)" />
 
-        <v-btn
-          class="mx-1"
-          text="حذف"
-          color="error"
+        <v-delete-btn
           :loading="isLoading_deleteWeight && deletingItemId == item.id"
           @click="deleteItem(item)"
         />
@@ -153,11 +154,9 @@ async function deleteItem(item) {
         v-model="dialog.formRef"
         @valid="dialog.item ? dialog.update() : dialog.add()"
       >
-        <v-card-title style="height: 50px" class="bg-grey-lighten-3">{{
+        <v-card-title>{{
           dialog.item ? "ویرایش بسته‌بندی" : "افزودن بسته‌بندی"
         }}</v-card-title>
-
-        <v-divider class="border-opacity-25" color="black" />
 
         <v-card-text>
           <v-row>
@@ -165,35 +164,23 @@ async function deleteItem(item) {
               <v-text-field
                 v-model="dialog.form.name"
                 label="نام بسته‌بندی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
-
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-6 py-4 flex-wrap align-center"
         >
           <v-spacer />
 
-          <v-btn
-            class="ml-2"
-            type="submit"
-            min-width="100"
-            color="primary"
+          <v-cancel-btn @click="dialog.close()" />
+
+          <v-submit-btn
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createWeight || isLoading_updateWeight"
-          />
-
-          <v-btn
-            min-width="100"
-            color="error"
-            text="لغو"
-            @click="dialog.close()"
           />
         </div>
       </custom-form>

@@ -1,20 +1,29 @@
 <script setup>
 import axios from "@/axios";
-import { areYouSure } from "@/utils/functions";
+import { areYouSure, toPersianDigit } from "@/utils/functions";
 import { required, requiredArray } from "@/utils/formRules";
+import { reactive } from "vue";
 
-const headers_category = [
-  { title: "شناسه", key: "id" },
-  { title: "نام", key: "name" },
-  { title: "عملیات", key: "actions", align: "center", sortable: false },
-];
+const category = reactive({
+  headers: [
+    { title: "شناسه", key: "id" },
+    { title: "نام", key: "name", minWidth: 110 },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
-const headers_product = [
-  { title: "شناسه", key: "id" },
-  { title: "نام", key: "name" },
-  { title: "دسته‌بندی", key: "category" },
-  { title: "عملیات", key: "actions", align: "center", sortable: false },
-];
+const product = reactive({
+  headers: [
+    { title: "شناسه", key: "id" },
+    { title: "نام", key: "name" },
+    { title: "دسته‌بندی", key: "category" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
 const appStore = useAppStore();
 const showProduct = ref(false);
@@ -228,6 +237,9 @@ const productSection = reactive({
 });
 
 const selectedCat = ref(null);
+const categoryProducts = computed(() =>
+  products.value?.filter((x) => x.categoryId == selectedCat.value.id)
+);
 
 async function deleteCategoryItem(item) {
   const { isConfirmed } = await areYouSure();
@@ -261,30 +273,29 @@ function addProductHandler(item) {
     />
 
     <v-data-table
-      class="border"
-      :headers="headers_category"
+      :headers="category.headers"
       :items="categories"
-      :items-per-page="10"
+      :page="category.page"
+      :items-per-page="category.itemsPerPage"
+      :page-text="`صفحه ${toPersianDigit(category.page)} از ${toPersianDigit(
+        Math.ceil(categories?.length / category.itemsPerPage)
+      )}`"
       :loading="isLoading_categories"
+      :hide-default-footer="!categories?.length || isLoading_categories"
     >
       <template #item.actions="{ item }">
-        <div class="d-flex justify-center">
+        <div class="d-flex justify-center align-center">
           <v-btn
+            size="small"
             class="mx-1"
             text="افزودن محصول"
             color="primary"
             @click="addProductHandler(item)"
           />
-          <v-btn
-            class="mx-1"
-            text="ویرایش"
-            color="warning"
-            @click="dialog.open(item)"
-          />
-          <v-btn
-            class="mx-1"
-            text="حذف"
-            color="error"
+
+          <v-edit-btn @click="dialog.open(item)" />
+
+          <v-delete-btn
             :loading="isLoading_deleteCategory && deletingItemId == item.id"
             @click="deleteCategoryItem(item)"
           />
@@ -294,19 +305,20 @@ function addProductHandler(item) {
   </template>
 
   <template v-else>
-    <div class="d-flex">
-      <span>{{ selectedCat.name }}</span>
+    <div class="d-flex align-center mb-4">
+      <span>دسته‌بندی:&nbsp;</span>
+      <v-chip label :text="selectedCat.name" />
 
       <v-btn
         append-icon="mdi-keyboard-backspace"
-        class="mb-3 mr-auto d-flex"
+        class="mr-auto d-flex"
         text="بازگشت به دسته‌بندی‌ها"
         color="primary"
         @click="showProduct = false"
       />
     </div>
 
-    <v-card class="mb-3">
+    <v-card class="mb-4 border" flat>
       <custom-form
         v-model="productSection.formRef"
         @valid="
@@ -319,7 +331,6 @@ function addProductHandler(item) {
               <v-text-field
                 v-model="productSection.form.name"
                 label="نام محصول"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -357,39 +368,32 @@ function addProductHandler(item) {
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
-
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-4 py-2 flex-wrap align-center"
         >
           <v-spacer />
 
-          <v-btn
-            class="ml-2"
-            type="submit"
-            min-width="100"
-            color="primary"
+          <v-cancel-btn @click="productSection.clear()" />
+
+          <v-submit-btn
             :text="productSection.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createProduct || isLoading_updateProduct"
-          />
-
-          <v-btn
-            min-width="100"
-            color="error"
-            text="لغو"
-            @click="productSection.clear()"
           />
         </div>
       </custom-form>
     </v-card>
 
     <v-data-table
-      class="border"
-      :headers="headers_product"
-      :items="products?.filter((x) => x.categoryId == selectedCat.id)"
-      :items-per-page="10"
+      :headers="product.headers"
+      :items="categoryProducts"
+      :page="product.page"
+      :items-per-page="product.itemsPerPage"
+      :page-text="`صفحه ${toPersianDigit(product.page)} از ${toPersianDigit(
+        Math.ceil(categoryProducts?.length / product.itemsPerPage)
+      )}`"
       :loading="isLoading_products"
+      :hide-default-footer="!categoryProducts?.length || isLoading_products"
     >
       <template #item.category="{ item }">
         {{ item.category.name }}
@@ -397,16 +401,9 @@ function addProductHandler(item) {
 
       <template #item.actions="{ item }">
         <div class="d-flex justify-center">
-          <v-btn
-            class="mx-1"
-            text="ویرایش"
-            color="warning"
-            @click="productSection.open(item)"
-          />
-          <v-btn
-            class="mx-1"
-            text="حذف"
-            color="error"
+          <v-edit-btn @click="productSection.open(item)" />
+
+          <v-delete-btn
             :loading="isLoading_deleteProduct && deletingItemId == item.id"
             @click="deleteProductItem(item)"
           />
@@ -421,11 +418,9 @@ function addProductHandler(item) {
         v-model="dialog.formRef"
         @valid="dialog.item ? dialog.update() : dialog.add()"
       >
-        <v-card-title style="height: 50px" class="bg-grey-lighten-3">{{
+        <v-card-title>{{
           dialog.item ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی"
         }}</v-card-title>
-
-        <v-divider class="border-opacity-25" color="black" />
 
         <v-card-text>
           <v-row>
@@ -433,7 +428,6 @@ function addProductHandler(item) {
               <v-text-field
                 v-model="dialog.form.name"
                 label="نام دسته‌بندی"
-                variant="outlined"
                 :rules="[required]"
               />
             </v-col>
@@ -450,28 +444,17 @@ function addProductHandler(item) {
           </v-row>
         </v-card-text>
 
-        <v-divider class="border-opacity-25" color="black" />
-
         <div
-          style="height: 50px"
-          class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
+          style="height: 72px"
+          class="d-flex px-6 py-4 flex-wrap align-center"
         >
           <v-spacer />
 
-          <v-btn
-            class="ml-2"
-            type="submit"
-            min-width="100"
-            color="primary"
+          <v-cancel-btn @click="dialog.close()" />
+
+          <v-submit-btn
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createCategory || isLoading_updateCategory"
-          />
-
-          <v-btn
-            min-width="100"
-            color="error"
-            text="لغو"
-            @click="dialog.close()"
           />
         </div>
       </custom-form>
