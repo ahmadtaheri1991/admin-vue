@@ -298,6 +298,7 @@ const filteredProducts = computed(() => {
           <v-cancel-btn @click="dialog.close()" />
 
           <v-submit-btn
+            type="submit"
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="
               isLoading_createProductModel || isLoading_updateProductModel

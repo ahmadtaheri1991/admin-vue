@@ -17,7 +17,49 @@ const statusTitles = {
   posted: "پست شده",
 };
 
-const order = reactive({
+const pendingOrder = reactive({
+  headers: [
+    { title: "", key: "id", sortable: false, align: "center" },
+    {
+      title: "نام و نام‌خانوادگی",
+      key: "fullName",
+      minWidth: 140,
+    },
+    { title: "شماره تماس", key: "phone", minWidth: 111 },
+    {
+      title: "زمان ثبت سفارش",
+      key: "createdAt",
+      align: "center",
+      minWidth: 155,
+    },
+    { title: "وضعیت", key: "status", align: "center" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
+const acceptedOrder = reactive({
+  headers: [
+    { title: "", key: "id", sortable: false, align: "center" },
+    {
+      title: "نام و نام‌خانوادگی",
+      key: "fullName",
+      minWidth: 140,
+    },
+    { title: "شماره تماس", key: "phone", minWidth: 111 },
+    {
+      title: "زمان ثبت سفارش",
+      key: "createdAt",
+      align: "center",
+      minWidth: 155,
+    },
+    { title: "وضعیت", key: "status", align: "center" },
+    { title: "عملیات", key: "actions", align: "center", sortable: false },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
+const postedOrder = reactive({
   headers: [
     { title: "", key: "id", sortable: false, align: "center" },
     {
@@ -367,218 +409,221 @@ function print(item) {
   <!-- <v-text-field class="mb-2" placeholder="جستجو" v-model="search" /> -->
 
   <v-data-table
-    class="border"
-    :headers="headers_order"
+    :headers="pendingOrder.headers"
     :items="pendingOrders"
-    :items-per-page="10"
-    :loading="isLoading_pendingOrders"
-  >
-    <template #headers="{ columns, toggleSort }">
-      <tr class="bg-grey-lighten-3">
-        <template v-for="column in columns" :key="column.key">
-          <th :class="{ 'text-center': column.align == 'center' }">
-            <span class="fw-600 fs-14" @click="() => toggleSort(column)">{{
-              column.title
-            }}</span>
-          </th>
-        </template>
-      </tr>
-    </template>
-
-    <template #item.id="{ item }">
-      {{ toPersianDigit(item.id) }}
-    </template>
-
-    <template #item.phone="{ item }">
-      {{ toPersianDigit(item.phone) }}
-    </template>
-
-    <template #item.payablePrice="{ item }">
-      {{ numberWithCommas(toPersianDigit(item.payablePrice)) }}
-    </template>
-
-    <template #item.lastFourDigits="{ item }">
-      {{ toPersianDigit(item.lastFourDigits) }}
-    </template>
-
-    <template #item.datetime="{ item: { month, day, hour, minute } }">
-      <div style="direction: ltr">
-        {{ toPersianDigit([month, "/", day, " ", hour, ":", minute].join("")) }}
-      </div>
-    </template>
-
-    <template #item.createdAt="{ item }">
-      {{
-        new Date(item.createdAt).toLocaleString("fa-IR", {
-          dateStyle: "medium",
-          timeStyle: "short",
-        })
-      }}
-    </template>
-
-    <template #item.status="{ item }">
-      <v-chip
-        class="width-80 text-center"
-        label
-        size="small"
-        :color="statusColors[item.status]"
-      >
-        <div class="width-60 text-center">
-          {{ statusTitles[item.status] }}
-        </div>
-      </v-chip>
-    </template>
-
-    <template #item.actions="{ item }">
-      <div class="d-flex justify-center">
-        <v-btn
-          class="ml-5"
-          color="primary"
-          text="جزئیات"
-          @click="dialog.open(item)"
-        />
-
-        <div class="width-270 mx-2">
-          <v-text-field
-            class="height-30"
-            density="compact"
-            variant="outlined"
-            v-model="item.deliveryCode"
-          ></v-text-field>
-        </div>
-
-        <v-btn
-          color="amber"
-          text="پست"
-          :loading="isLoading_deliverOrder && deliveringItemId == item.id"
-          @click="postHandler(item)"
-        />
-
-        <v-btn
-          class="mr-5"
-          color="secondary"
-          text="پرینت"
-          @click="print(item)"
-        />
-      </div>
-    </template>
-  </v-data-table>
-
-  <v-data-table
-    class="border mt-4"
-    :headers="headers_order"
-    :items="acceptedOrders"
-    :items-per-page="10"
-    :loading="isLoading_acceptedOrders"
-  >
-    <template #headers="{ columns, toggleSort }">
-      <tr class="bg-grey-lighten-3">
-        <template v-for="column in columns" :key="column.key">
-          <th :class="{ 'text-center': column.align == 'center' }">
-            <span class="fw-600 fs-14" @click="() => toggleSort(column)">{{
-              column.title
-            }}</span>
-          </th>
-        </template>
-      </tr>
-    </template>
-
-    <template #item.id="{ item }">
-      {{ toPersianDigit(item.id) }}
-    </template>
-
-    <template #item.phone="{ item }">
-      {{ toPersianDigit(item.phone) }}
-    </template>
-
-    <template #item.payablePrice="{ item }">
-      {{ numberWithCommas(toPersianDigit(item.payablePrice)) }}
-    </template>
-
-    <template #item.lastFourDigits="{ item }">
-      {{ toPersianDigit(item.lastFourDigits) }}
-    </template>
-
-    <template #item.datetime="{ item: { month, day, hour, minute } }">
-      <div style="direction: ltr">
-        {{ toPersianDigit([month, "/", day, " ", hour, ":", minute].join("")) }}
-      </div>
-    </template>
-
-    <template #item.createdAt="{ item }">
-      {{
-        new Date(item.createdAt).toLocaleString("fa-IR", {
-          dateStyle: "medium",
-          timeStyle: "short",
-        })
-      }}
-    </template>
-
-    <template #item.status="{ item }">
-      <v-chip
-        class="width-80 text-center"
-        label
-        size="small"
-        :color="statusColors[item.status]"
-      >
-        <div class="width-60 text-center">
-          {{ statusTitles[item.status] }}
-        </div>
-      </v-chip>
-    </template>
-
-    <template #item.actions="{ item }">
-      <div class="d-flex justify-center">
-        <v-btn
-          class="ml-5"
-          color="primary"
-          text="جزئیات"
-          @click="dialog.open(item)"
-        />
-
-        <div class="width-270 mx-2">
-          <v-text-field
-            class="height-30"
-            density="compact"
-            variant="outlined"
-            v-model="item.deliveryCode"
-          ></v-text-field>
-        </div>
-
-        <v-btn
-          color="amber"
-          text="پست"
-          :loading="isLoading_deliverOrder && deliveringItemId == item.id"
-          @click="postHandler(item)"
-        />
-
-        <v-btn
-          class="mr-5"
-          color="secondary"
-          text="پرینت"
-          @click="print(item)"
-        />
-      </div>
-    </template>
-  </v-data-table>
-
-  <v-data-table
-    class="border mt-4"
-    :headers="headers_order"
-    :items="postedOrders"
-    :items-per-page="10"
-    :loading="isLoading_postedOrders"
-  >
-    <template #headers="{ columns, toggleSort }">
-    :headers="order.headers"
-    :items="filteredItems"
-    :page="order.page"
-    :items-per-page="order.itemsPerPage"
-    :page-text="`صفحه ${toPersianDigit(order.page)} از ${toPersianDigit(
-      Math.ceil(filteredItems?.length / order.itemsPerPage)
+    :page="pendingOrder.page"
+    :items-per-page="pendingOrder.itemsPerPage"
+    :page-text="`صفحه ${toPersianDigit(pendingOrder.page)} از ${toPersianDigit(
+      Math.ceil(pendingOrders?.length / pendingOrder.itemsPerPage)
     )}`"
-    :loading="isLoading_orders"
-    :hide-default-footer="!filteredItems?.length || isLoading_orders"
+    :loading="isLoading_pendingOrders"
+    :hide-default-footer="!pendingOrders?.length || isLoading_pendingOrders"
+  >
+    <!-- <template #headers="{ columns, toggleSort }">
+      <tr class="bg-grey-lighten-3">
+        <template v-for="column in columns" :key="column.key">
+          <th :class="{ 'text-center': column.align == 'center' }">
+            <span class="fw-600 fs-14" @click="() => toggleSort(column)">{{
+              column.title
+            }}</span>
+          </th>
+        </template>
+      </tr>
+    </template> -->
+
+    <template #item.id="{ item }">
+      {{ toPersianDigit(item.id) }}
+    </template>
+
+    <template #item.phone="{ item }">
+      {{ toPersianDigit(item.phone) }}
+    </template>
+
+    <template #item.payablePrice="{ item }">
+      {{ numberWithCommas(toPersianDigit(item.payablePrice)) }}
+    </template>
+
+    <template #item.lastFourDigits="{ item }">
+      {{ toPersianDigit(item.lastFourDigits) }}
+    </template>
+
+    <template #item.datetime="{ item: { month, day, hour, minute } }">
+      <div style="direction: ltr">
+        {{ toPersianDigit([month, "/", day, " ", hour, ":", minute].join("")) }}
+      </div>
+    </template>
+
+    <template #item.createdAt="{ item }">
+      {{
+        new Date(item.createdAt).toLocaleString("fa-IR", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        })
+      }}
+    </template>
+
+    <template #item.status="{ item }">
+      <v-chip
+        class="width-80 text-center"
+        label
+        size="small"
+        :color="statusColors[item.status]"
+      >
+        <div class="width-60 text-center">
+          {{ statusTitles[item.status] }}
+        </div>
+      </v-chip>
+    </template>
+
+    <template #item.actions="{ item }">
+      <div class="d-flex justify-center">
+        <v-btn
+          class="ml-5"
+          color="primary"
+          text="جزئیات"
+          @click="dialog.open(item)"
+        />
+
+        <div class="width-270 mx-2">
+          <v-text-field
+            class="height-30"
+            density="compact"
+            variant="outlined"
+            v-model="item.deliveryCode"
+          ></v-text-field>
+        </div>
+
+        <v-btn
+          color="amber"
+          text="پست"
+          :loading="isLoading_deliverOrder && deliveringItemId == item.id"
+          @click="postHandler(item)"
+        />
+
+        <v-btn
+          class="mr-5"
+          color="secondary"
+          text="پرینت"
+          @click="print(item)"
+        />
+      </div>
+    </template>
+  </v-data-table>
+
+  <v-data-table
+    class="mt-4"
+    :headers="acceptedOrder.headers"
+    :items="acceptedOrders"
+    :page="acceptedOrder.page"
+    :items-per-page="acceptedOrder.itemsPerPage"
+    :page-text="`صفحه ${toPersianDigit(acceptedOrder.page)} از ${toPersianDigit(
+      Math.ceil(acceptedOrders?.length / acceptedOrder.itemsPerPage)
+    )}`"
+    :loading="isLoading_acceptedOrders"
+    :hide-default-footer="!acceptedOrders?.length || isLoading_acceptedOrders"
+  >
+    <!-- <template #headers="{ columns, toggleSort }">
+      <tr class="bg-grey-lighten-3">
+        <template v-for="column in columns" :key="column.key">
+          <th :class="{ 'text-center': column.align == 'center' }">
+            <span class="fw-600 fs-14" @click="() => toggleSort(column)">{{
+              column.title
+            }}</span>
+          </th>
+        </template>
+      </tr>
+    </template> -->
+
+    <template #item.id="{ item }">
+      {{ toPersianDigit(item.id) }}
+    </template>
+
+    <template #item.phone="{ item }">
+      {{ toPersianDigit(item.phone) }}
+    </template>
+
+    <template #item.payablePrice="{ item }">
+      {{ numberWithCommas(toPersianDigit(item.payablePrice)) }}
+    </template>
+
+    <template #item.lastFourDigits="{ item }">
+      {{ toPersianDigit(item.lastFourDigits) }}
+    </template>
+
+    <template #item.datetime="{ item: { month, day, hour, minute } }">
+      <div style="direction: ltr">
+        {{ toPersianDigit([month, "/", day, " ", hour, ":", minute].join("")) }}
+      </div>
+    </template>
+
+    <template #item.createdAt="{ item }">
+      {{
+        new Date(item.createdAt).toLocaleString("fa-IR", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        })
+      }}
+    </template>
+
+    <template #item.status="{ item }">
+      <v-chip
+        class="width-80 text-center"
+        label
+        size="small"
+        :color="statusColors[item.status]"
+      >
+        <div class="width-60 text-center">
+          {{ statusTitles[item.status] }}
+        </div>
+      </v-chip>
+    </template>
+
+    <template #item.actions="{ item }">
+      <div class="d-flex justify-center">
+        <v-btn
+          class="ml-5"
+          color="primary"
+          text="جزئیات"
+          @click="dialog.open(item)"
+        />
+
+        <div class="width-270 mx-2">
+          <v-text-field
+            class="height-30"
+            density="compact"
+            variant="outlined"
+            v-model="item.deliveryCode"
+          ></v-text-field>
+        </div>
+
+        <v-btn
+          color="amber"
+          text="پست"
+          :loading="isLoading_deliverOrder && deliveringItemId == item.id"
+          @click="postHandler(item)"
+        />
+
+        <v-btn
+          class="mr-5"
+          color="secondary"
+          text="پرینت"
+          @click="print(item)"
+        />
+      </div>
+    </template>
+  </v-data-table>
+
+  <v-data-table
+    class="mt-4"
+    :headers="postedOrder.headers"
+    :items="postedOrders"
+    :page="postedOrder.page"
+    :items-per-page="postedOrder.itemsPerPage"
+    :page-text="`صفحه ${toPersianDigit(postedOrder.page)} از ${toPersianDigit(
+      Math.ceil(postedOrders?.length / postedOrder.itemsPerPage)
+    )}`"
+    :loading="isLoading_postedOrders"
+    :hide-default-footer="!postedOrders?.length || isLoading_postedOrders"
   >
     <!-- <template #headers="{ columns, isSorted, getSortIcon, toggleSort }">
       <tr class="bg-grey-lighten-3">
@@ -921,6 +966,7 @@ function print(item) {
           <v-cancel-btn @click="orderItemDialog.close()" />
 
           <v-submit-btn
+            type="submit"
             text="ویرایش"
             :loading="isLoading_createEditOrderItem"
           />

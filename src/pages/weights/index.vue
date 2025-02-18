@@ -32,7 +32,7 @@ const { mutate: createWeight, isPending: isLoading_createWeight } = useMutation(
     mutationFn: (body) => axios.post("weights", body),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت افزوده شد");
-      refetch_products();
+      refetch_weights();
       dialog.close();
     },
     onError: (error) => {
@@ -49,7 +49,7 @@ const { mutate: updateWeight, isPending: isLoading_updateWeight } = useMutation(
     mutationFn: ({ id, body }) => axios.patch(`weights/${id}`, body),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت ویرایش شد");
-      refetch_products();
+      refetch_weights();
       dialog.close();
     },
     onError: (error) => {
@@ -66,7 +66,7 @@ const { mutate: deleteWeight, isPending: isLoading_deleteWeight } = useMutation(
     mutationFn: (id) => axios.delete(`weights/${id}`),
     onSuccess: () => {
       appStore.openAlert(0, "حذف با موفقیت انجام شد");
-      refetch_products();
+      refetch_weights();
     },
     onError: (error) => {
       console.log(error);
@@ -179,6 +179,7 @@ async function deleteItem(item) {
           <v-cancel-btn @click="dialog.close()" />
 
           <v-submit-btn
+            type="submit"
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createWeight || isLoading_updateWeight"
           />

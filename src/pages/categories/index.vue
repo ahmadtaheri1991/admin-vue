@@ -377,6 +377,7 @@ function addProductHandler(item) {
           <v-cancel-btn @click="productSection.clear()" />
 
           <v-submit-btn
+            type="submit"
             :text="productSection.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createProduct || isLoading_updateProduct"
           />
@@ -453,6 +454,7 @@ function addProductHandler(item) {
           <v-cancel-btn @click="dialog.close()" />
 
           <v-submit-btn
+            type="submit"
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createCategory || isLoading_updateCategory"
           />

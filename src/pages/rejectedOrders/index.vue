@@ -15,14 +15,18 @@ const statusTitles = {
   posted: "پست شده",
 };
 
-const headers_order = [
-  { title: "", key: "id", width: 40, sortable: false, align: "center" },
-  { title: "نام و نام‌خانوادگی", key: "fullName" },
-  { title: "شماره تماس", key: "phone" },
-  { title: "زمان ثبت سفارش", key: "createdAt", align: "center" },
-  { title: "وضعیت", key: "status", align: "center" },
-  { title: "عملیات", key: "actions", align: "center" },
-];
+const order = reactive({
+  headers: [
+    { title: "", key: "id", width: 40, sortable: false, align: "center" },
+    { title: "نام و نام‌خانوادگی", key: "fullName" },
+    { title: "شماره تماس", key: "phone" },
+    { title: "زمان ثبت سفارش", key: "createdAt", align: "center" },
+    { title: "وضعیت", key: "status", align: "center" },
+    { title: "عملیات", key: "actions", align: "center" },
+  ],
+  page: 1,
+  itemsPerPage: 10,
+});
 
 const filteredItems = computed(() => {
   return orders.value?.filter((x) =>
@@ -78,14 +82,18 @@ const search = ref("");
 </script>
 
 <template>
-  <v-text-field class="mb-2" placeholder="جستجو" v-model="search" />
+  <!-- <v-text-field class="mb-2" placeholder="جستجو" v-model="search" /> -->
 
   <v-data-table
-    class="border"
-    :headers="headers_order"
+    :headers="order.headers"
     :items="filteredItems"
-    :items-per-page="10"
+    :page="order.page"
+    :items-per-page="order.itemsPerPage"
+    :page-text="`صفحه ${toPersianDigit(order.page)} از ${toPersianDigit(
+      Math.ceil(filteredItems?.length / order.itemsPerPage)
+    )}`"
     :loading="isLoading_orders"
+    :hide-default-footer="!filteredItems?.length || isLoading_orders"
   >
     <template #headers="{ columns, isSorted, getSortIcon, toggleSort }">
       <tr class="bg-grey-lighten-3">
@@ -152,11 +160,7 @@ const search = ref("");
 
   <v-dialog v-model="dialog.canBeShown">
     <v-card min-height="500px">
-      <v-card-title style="height: 50px" class="bg-grey-lighten-3">
-        جزئیات سفارش {{ dialog.item.id }}
-      </v-card-title>
-
-      <v-divider class="border-opacity-25" color="black" />
+      <v-card-title> جزئیات سفارش {{ dialog.item.id }} </v-card-title>
 
       <v-card-text>
         {{ dialog.name }}
@@ -167,7 +171,7 @@ const search = ref("");
 
           <v-col
             cols="auto"
-            v-for="item in headers_order.slice(2, -3)"
+            v-for="item in order.headers.slice(2, -3)"
             :key="item.id"
           >
             <data-label
@@ -210,11 +214,9 @@ const search = ref("");
         </v-row>
 
         <v-data-table
-          class="border mt-4"
+          class="mt-4"
           :headers="dialog.table.headers"
           :items="dialog.table.items"
-          :items-per-page="dialog.table.itemsPerPage"
-          density="compact"
           items-per-page="-1"
           show-expand
         >
@@ -247,6 +249,7 @@ const search = ref("");
             <v-btn
               v-if="alternate.length > 0"
               variant="text"
+              rounded="full"
               @click="toggleExpand(internalItem)"
               :icon="
                 isExpanded(internalItem) ? 'mdi-chevron-up' : 'mdi-chevron-down'
@@ -263,22 +266,16 @@ const search = ref("");
               <td>{{ item.price }}</td>
               <td>{{ item.price * item.count }}</td>
               <td></td>
-              <td></td>
             </tr>
           </template>
         </v-data-table>
       </v-card-text>
 
-      <v-divider class="border-opacity-25" color="black" />
-
-      <div
-        style="height: 50px"
-        class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
-      >
+      <div style="height: 72px" class="d-flex px-4 py-2 flex-wrap align-center">
         <v-spacer />
 
         <v-btn
-          size="small"
+          height="40"
           class="mx-2"
           color="primary"
           text="بستن"
