@@ -3,6 +3,9 @@ import { areYouSure, toPersianDigit } from "@/utils/functions";
 import axios from "@/axios";
 import { required } from "@/utils/formRules";
 import { nextTick } from "vue";
+import { useDisplay } from "vuetify/lib/framework.mjs";
+
+const { xs } = useDisplay();
 
 const statusColors = {
   pending: "grey",
@@ -163,12 +166,12 @@ const dialog = reactive({
   item: null,
   table: {
     headers: [
-      { title: "ردیف", key: "row" },
-      { title: "نام محصول", key: "name" },
-      { title: "وزن", key: "weight" },
-      { title: "تعداد", key: "count" },
-      { title: "قیمت واحد", key: "unitPrice" },
-      { title: "قیمت کل", key: "totalPrice" },
+      { title: "", key: "row", sortable: false },
+      { title: "نام محصول", key: "name", minWidth: 105 },
+      { title: "وزن", key: "weight", minWidth: 85 },
+      { title: "تعداد", key: "count", align: "center" },
+      { title: "قیمت واحد", key: "unitPrice", minWidth: 105, align: "center" },
+      { title: "قیمت کل", key: "totalPrice", minWidth: 95, align: "center" },
       { title: "عملیات", key: "actions", align: "center" },
     ],
     items: [],
@@ -718,11 +721,13 @@ function print(item) {
 
   <v-dialog v-model="dialog.canBeShown">
     <v-card min-height="500px">
-      <v-card-title> جزئیات سفارش {{ dialog.item.id }} </v-card-title>
+      <v-card-title>
+        جزئیات سفارش {{ toPersianDigit(dialog.item.id) }}
+      </v-card-title>
 
       <v-card-text>
         {{ dialog.name }}
-        <v-row>
+        <v-row :dense="xs">
           <v-col cols="auto">
             <data-label :value="dialog.item.fullName" />
           </v-col>
@@ -780,9 +785,21 @@ function print(item) {
         >
           <template #bottom></template>
 
-          <template #item.row="{ index }">{{ index + 1 }}</template>
+          <template #item.row="{ index }">{{
+            toPersianDigit(index + 1)
+          }}</template>
 
-          <template #headers="{ columns, toggleSort }">
+          <template #item.count="{ item }">{{
+            toPersianDigit(item.count)
+          }}</template>
+          <template #item.unitPrice="{ item }">{{
+            toPersianDigit(item.unitPrice)
+          }}</template>
+          <template #item.totalPrice="{ item }">{{
+            toPersianDigit(item.totalPrice)
+          }}</template>
+
+          <!-- <template #headers="{ columns, toggleSort }">
             <tr class="bg-grey-lighten-3">
               <template v-for="column in columns" :key="column.key">
                 <th :class="{ 'text-center': column.align == 'center' }">
@@ -794,7 +811,7 @@ function print(item) {
                 </th>
               </template>
             </tr>
-          </template>
+          </template> -->
 
           <template #item.actions="{ item }">
             <v-edit-btn @click="orderItemDialog.open(item)" />
@@ -977,12 +994,6 @@ function print(item) {
 
   <v-dialog fullscreen v-model="printDialog.canBeShown">
     <v-card>
-      <v-card-title style="height: 50px" class="bg-grey-lighten-3">
-        پرینت
-      </v-card-title>
-
-      <v-divider class="border-opacity-25" color="black" />
-
       <v-card-text>
         <div class="d-flex">
           <div class="d-flex flex-column">
@@ -1040,22 +1051,10 @@ function print(item) {
         </v-row>
       </v-card-text>
 
-      <v-divider class="border-opacity-25" color="black" />
-
-      <div
-        style="height: 50px"
-        class="d-flex px-4 py-2 flex-wrap align-center bg-grey-lighten-4"
-      >
+      <div style="height: 72px" class="d-flex px-6 py-4 flex-wrap align-center">
         <v-spacer />
 
-        <v-btn
-          size="small"
-          class="mx-2"
-          color="error"
-          text="لغو"
-          flat
-          @click="printDialog.close()"
-        />
+        <v-cancel-btn @click="printDialog.close()" />
       </div>
     </v-card>
   </v-dialog>

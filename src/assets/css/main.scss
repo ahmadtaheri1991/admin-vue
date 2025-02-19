@@ -11,6 +11,11 @@
   background-color: transparent !important;
 }
 
+.v-data-table__td.v-data-table-column--align-center.v-data-table__th--sortable.v-data-table__th {
+  position: relative;
+  right: 11px;
+}
+
 .v-data-table {
   .v-table__wrapper {
     border-radius: 8px;

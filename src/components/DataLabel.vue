@@ -4,7 +4,7 @@ defineProps(["title", "value"]);
 
 <template>
   <div>
-    <span class="fw-600" v-if="title">{{ title + " : " }}</span>
+    <span class="fw-600" v-if="title">{{ title + ": " }}</span>
 
     <span class="fs-14">
       <slot>{{ value }}</slot>
