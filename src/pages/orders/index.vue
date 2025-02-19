@@ -729,13 +729,13 @@ function print(item) {
 
           <v-col
             cols="auto"
-            v-for="item in order.headers.slice(2, -3)"
+            v-for="item in pendingOrder.headers.slice(2, -3)"
             :key="item.id"
           >
             <data-label
               style="direction: ltr"
               :title="item.title"
-              :value="dialog.item[item.key]"
+              :value="toPersianDigit(dialog.item[item.key])"
             />
           </v-col>
 
@@ -746,7 +746,7 @@ function print(item) {
                   [dialog.item.month, "/", dialog.item.day].join("")
                 )
               }}</span>
-              <span class="mx-2"></span>
+              <span class="mx-1"></span>
               <span>{{
                 toPersianDigit(
                   [dialog.item.hour, ":", dialog.item.minute].join("")
@@ -758,7 +758,7 @@ function print(item) {
           <v-col cols="auto">
             <data-label
               title="۴ رقم آخر شماره کارت"
-              :value="dialog.item.lastFourDigits"
+              :value="toPersianDigit(dialog.item.lastFourDigits)"
             />
           </v-col>
 

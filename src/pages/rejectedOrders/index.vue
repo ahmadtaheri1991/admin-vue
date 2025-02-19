@@ -18,9 +18,14 @@ const statusTitles = {
 const order = reactive({
   headers: [
     { title: "", key: "id", width: 40, sortable: false, align: "center" },
-    { title: "نام و نام‌خانوادگی", key: "fullName" },
-    { title: "شماره تماس", key: "phone" },
-    { title: "زمان ثبت سفارش", key: "createdAt", align: "center" },
+    { title: "نام و نام‌خانوادگی", key: "fullName", minWidth: 140 },
+    { title: "شماره تماس", key: "phone", minWidth: 111 },
+    {
+      title: "زمان ثبت سفارش",
+      key: "createdAt",
+      align: "center",
+      minWidth: 155,
+    },
     { title: "وضعیت", key: "status", align: "center" },
     { title: "عملیات", key: "actions", align: "center" },
   ],
@@ -95,7 +100,7 @@ const search = ref("");
     :loading="isLoading_orders"
     :hide-default-footer="!filteredItems?.length || isLoading_orders"
   >
-    <template #headers="{ columns, isSorted, getSortIcon, toggleSort }">
+    <!-- <template #headers="{ columns, isSorted, getSortIcon, toggleSort }">
       <tr class="bg-grey-lighten-3">
         <template v-for="column in columns" :key="column.key">
           <th :class="{ 'text-center': column.align == 'center' }">
@@ -105,7 +110,7 @@ const search = ref("");
           </th>
         </template>
       </tr>
-    </template>
+    </template> -->
 
     <template #item.id="{ item }">
       {{ toPersianDigit(item.id) }}
@@ -177,7 +182,7 @@ const search = ref("");
             <data-label
               style="direction: ltr"
               :title="item.title"
-              :value="dialog.item[item.key]"
+              :value="toPersianDigit(dialog.item[item.key])"
             />
           </v-col>
 
@@ -188,7 +193,7 @@ const search = ref("");
                   [dialog.item.month, "/", dialog.item.day].join("")
                 )
               }}</span>
-              <span class="mx-2"></span>
+              <span class="mx-1"></span>
               <span>{{
                 toPersianDigit(
                   [dialog.item.hour, ":", dialog.item.minute].join("")
@@ -200,7 +205,7 @@ const search = ref("");
           <v-col cols="auto">
             <data-label
               title="۴ رقم آخر شماره کارت"
-              :value="dialog.item.lastFourDigits"
+              :value="toPersianDigit(dialog.item.lastFourDigits)"
             />
           </v-col>
 
