@@ -283,6 +283,8 @@ function addProductHandler(item) {
       :loading="isLoading_categories"
       :hide-default-footer="!categories?.length || isLoading_categories"
     >
+      <template #item.id="{item}">{{ toPersianDigit(item.id) }}</template>
+
       <template #item.actions="{ item }">
         <div class="d-flex justify-center align-center">
           <v-btn
@@ -396,6 +398,8 @@ function addProductHandler(item) {
       :loading="isLoading_products"
       :hide-default-footer="!categoryProducts?.length || isLoading_products"
     >
+    <template #item.id="{item}">{{ toPersianDigit(item.id) }}</template>
+    
       <template #item.category="{ item }">
         {{ item.category.name }}
       </template>

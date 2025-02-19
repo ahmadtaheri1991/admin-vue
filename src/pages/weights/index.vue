@@ -136,6 +136,8 @@ async function deleteItem(item) {
     :loading="isLoading_weights"
     :hide-default-footer="!weights?.length || isLoading_weights"
   >
+    <template #item.id="{ item }">{{ toPersianDigit(item.id) }}</template>
+
     <template #item.actions="{ item }">
       <div class="d-flex justify-center">
         <v-edit-btn @click="dialog.open(item)" />

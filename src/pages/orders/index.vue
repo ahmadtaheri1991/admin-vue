@@ -792,9 +792,11 @@ function print(item) {
           <template #item.count="{ item }">{{
             toPersianDigit(item.count)
           }}</template>
+
           <template #item.unitPrice="{ item }">{{
             toPersianDigit(item.unitPrice)
           }}</template>
+
           <template #item.totalPrice="{ item }">{{
             toPersianDigit(item.totalPrice)
           }}</template>

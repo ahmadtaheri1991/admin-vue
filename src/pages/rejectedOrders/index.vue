@@ -57,9 +57,9 @@ const dialog = reactive({
       { title: "ردیف", key: "row" },
       { title: "نام محصول", key: "name" },
       { title: "وزن", key: "weight" },
-      { title: "تعداد", key: "count" },
-      { title: "قیمت واحد", key: "unitPrice" },
-      { title: "قیمت کل", key: "totalPrice" },
+      { title: "تعداد", key: "count", align: "center" },
+      { title: "قیمت واحد", key: "unitPrice", align: "center" },
+      { title: "قیمت کل", key: "totalPrice", align: "center" },
     ],
     items: [],
   },
@@ -165,7 +165,9 @@ const search = ref("");
 
   <v-dialog v-model="dialog.canBeShown">
     <v-card min-height="500px">
-      <v-card-title> جزئیات سفارش {{ dialog.item.id }} </v-card-title>
+      <v-card-title>
+        جزئیات سفارش {{ toPersianDigit(dialog.item.id) }}
+      </v-card-title>
 
       <v-card-text>
         {{ dialog.name }}
@@ -227,7 +229,21 @@ const search = ref("");
         >
           <template #bottom></template>
 
-          <template #item.row="{ index }">{{ index + 1 }}</template>
+          <template #item.row="{ index }">{{
+            toPersianDigit(index + 1)
+          }}</template>
+
+          <template #item.count="{ item }">{{
+            toPersianDigit(item.count)
+          }}</template>
+
+          <template #item.unitPrice="{ item }">{{
+            toPersianDigit(item.unitPrice)
+          }}</template>
+
+          <template #item.totalPrice="{ item }">{{
+            toPersianDigit(item.totalPrice)
+          }}</template>
 
           <template #headers="{ columns, isSorted, getSortIcon, toggleSort }">
             <tr class="bg-grey-lighten-3">

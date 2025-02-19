@@ -15,8 +15,8 @@ const productModel = reactive({
     { title: "دسته‌بندی", key: "category" },
     { title: "محصول", key: "product" },
     { title: "بسته‌بندی", key: "weight" },
-    { title: "قیمت", key: "price" },
-    { title: "موجودی", key: "inventory" },
+    { title: "قیمت", key: "price", align: "center" },
+    { title: "موجودی", key: "inventory", align: "center" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
   ],
   page: 1,
@@ -208,12 +208,14 @@ const filteredProducts = computed(() => {
   >
     <template #item="{ item }">
       <tr :class="{ 'bg-red-lighten-4': item.inventory < 10 }">
-        <td>{{ item.id }}</td>
+        <td>{{ toPersianDigit(item.id) }}</td>
         <td>{{ item.category.name }}</td>
         <td>{{ item.product.name }}</td>
         <td>{{ item.weight.name }}</td>
-        <td>{{ toPersianNumber(numberWithCommas(item.price)) }}</td>
-        <td>{{ toPersianNumber(item.inventory) }}</td>
+        <td class="text-center">
+          {{ toPersianNumber(numberWithCommas(item.price)) }}
+        </td>
+        <td class="text-center">{{ toPersianNumber(item.inventory) }}</td>
         <td>
           <div class="d-flex justify-center">
             <v-edit-btn @click="dialog.open(item)" />
