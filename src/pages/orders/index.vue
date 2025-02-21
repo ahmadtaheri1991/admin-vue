@@ -22,7 +22,7 @@ const statusTitles = {
 
 const pendingOrder = reactive({
   headers: [
-    { title: "", key: "id", sortable: false, align: "center" },
+    { title: "", key: "row", sortable: false },
     {
       title: "نام و نام‌خانوادگی",
       key: "fullName",
@@ -43,7 +43,7 @@ const pendingOrder = reactive({
 });
 const acceptedOrder = reactive({
   headers: [
-    { title: "", key: "id", sortable: false, align: "center" },
+    { title: "", key: "row", sortable: false },
     {
       title: "نام و نام‌خانوادگی",
       key: "fullName",
@@ -64,7 +64,7 @@ const acceptedOrder = reactive({
 });
 const postedOrder = reactive({
   headers: [
-    { title: "", key: "id", sortable: false, align: "center" },
+    { title: "", key: "row", sortable: false },
     {
       title: "نام و نام‌خانوادگی",
       key: "fullName",
@@ -422,21 +422,7 @@ function print(item) {
     :loading="isLoading_pendingOrders"
     :hide-default-footer="!pendingOrders?.length || isLoading_pendingOrders"
   >
-    <!-- <template #headers="{ columns, toggleSort }">
-      <tr class="bg-grey-lighten-3">
-        <template v-for="column in columns" :key="column.key">
-          <th :class="{ 'text-center': column.align == 'center' }">
-            <span class="fw-600 fs-14" @click="() => toggleSort(column)">{{
-              column.title
-            }}</span>
-          </th>
-        </template>
-      </tr>
-    </template> -->
-
-    <template #item.id="{ item }">
-      {{ toPersianDigit(item.id) }}
-    </template>
+    <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template>
 
     <template #item.phone="{ item }">
       {{ toPersianDigit(item.phone) }}
@@ -525,21 +511,7 @@ function print(item) {
     :loading="isLoading_acceptedOrders"
     :hide-default-footer="!acceptedOrders?.length || isLoading_acceptedOrders"
   >
-    <!-- <template #headers="{ columns, toggleSort }">
-      <tr class="bg-grey-lighten-3">
-        <template v-for="column in columns" :key="column.key">
-          <th :class="{ 'text-center': column.align == 'center' }">
-            <span class="fw-600 fs-14" @click="() => toggleSort(column)">{{
-              column.title
-            }}</span>
-          </th>
-        </template>
-      </tr>
-    </template> -->
-
-    <template #item.id="{ item }">
-      {{ toPersianDigit(item.id) }}
-    </template>
+    <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template>
 
     <template #item.phone="{ item }">
       {{ toPersianDigit(item.phone) }}
@@ -628,21 +600,7 @@ function print(item) {
     :loading="isLoading_postedOrders"
     :hide-default-footer="!postedOrders?.length || isLoading_postedOrders"
   >
-    <!-- <template #headers="{ columns, isSorted, getSortIcon, toggleSort }">
-      <tr class="bg-grey-lighten-3">
-        <template v-for="column in columns" :key="column.key">
-          <th :class="{ 'text-center': column.align == 'center' }">
-            <span class="fw-600 fs-14" @click="() => toggleSort(column)">{{
-              column.title
-            }}</span>
-          </th>
-        </template>
-      </tr>
-    </template> -->
-
-    <template #item.id="{ item }">
-      {{ toPersianDigit(item.id) }}
-    </template>
+    <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template>
 
     <template #item.phone="{ item }">
       {{ toPersianDigit(item.phone) }}

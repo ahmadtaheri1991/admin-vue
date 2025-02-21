@@ -6,7 +6,7 @@ import { required, requiredArray } from "@/utils/formRules";
 
 const product = reactive({
   headers: [
-    { title: "شناسه", key: "id" },
+    { title: "", key: "row", sortable: false },
     { title: "نام", key: "name" },
     { title: "دسته‌بندی", key: "category" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
@@ -17,7 +17,7 @@ const product = reactive({
 
 const productModel = reactive({
   headers: [
-    { title: "شناسه", key: "id" },
+    { title: "", key: "row", sortable: false },
     { title: "دسته‌بندی", key: "category" },
     { title: "محصول", key: "product" },
     { title: "بسته‌بندی", key: "weight" },
@@ -314,7 +314,7 @@ function addProductModelHandler(item) {
       :loading="isLoading_products"
       :hide-default-footer="!products?.length || isLoading_products"
     >
-      <template #item.id="{ item }">{{ toPersianDigit(item.id) }}</template>
+      <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template>
 
       <template #item.category="{ item }">
         {{ item.category.name }}
@@ -426,9 +426,9 @@ function addProductModelHandler(item) {
         !productProductModels?.length || isLoading_productModels
       "
     >
-      <template #item="{ item }">
+      <template #item="{ item, index }">
         <tr :class="{ 'bg-red-lighten-4': item.inventory < 10 }">
-          <td>{{ toPersianDigit(item.id) }}</td>
+          <td>{{ toPersianDigit(index + 1) }}</td>
           <td>{{ item.category.name }}</td>
           <td>{{ item.product.name }}</td>
           <td>{{ item.weight.name }}</td>

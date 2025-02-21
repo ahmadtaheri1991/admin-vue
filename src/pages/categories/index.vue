@@ -6,7 +6,7 @@ import { reactive } from "vue";
 
 const category = reactive({
   headers: [
-    { title: "شناسه", key: "id" },
+    { title: "", key: "row", sortable: false },
     { title: "نام", key: "name", minWidth: 110 },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
   ],
@@ -16,7 +16,7 @@ const category = reactive({
 
 const product = reactive({
   headers: [
-    { title: "شناسه", key: "id" },
+    { title: "", key: "row", sortable: false },
     { title: "نام", key: "name" },
     { title: "دسته‌بندی", key: "category" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
@@ -283,7 +283,7 @@ function addProductHandler(item) {
       :loading="isLoading_categories"
       :hide-default-footer="!categories?.length || isLoading_categories"
     >
-      <template #item.id="{item}">{{ toPersianDigit(item.id) }}</template>
+      <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template>
 
       <template #item.actions="{ item }">
         <div class="d-flex justify-center align-center">
@@ -397,9 +397,10 @@ function addProductHandler(item) {
       )}`"
       :loading="isLoading_products"
       :hide-default-footer="!categoryProducts?.length || isLoading_products"
-    >
-    <template #item.id="{item}">{{ toPersianDigit(item.id) }}</template>
-    
+      ><template #item.row="{ index }">{{
+        toPersianDigit(index + 1)
+      }}</template>
+
       <template #item.category="{ item }">
         {{ item.category.name }}
       </template>

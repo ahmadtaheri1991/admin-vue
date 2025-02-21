@@ -11,9 +11,9 @@ import { required } from "@/utils/formRules";
 
 const productModel = reactive({
   headers: [
-    { title: "شناسه", key: "id" },
-    { title: "دسته‌بندی", key: "category" },
+    { title: "", key: "row", sortable: false },
     { title: "محصول", key: "product" },
+    { title: "دسته‌بندی", key: "category" },
     { title: "بسته‌بندی", key: "weight" },
     { title: "قیمت", key: "price", align: "center" },
     { title: "موجودی", key: "inventory", align: "center" },
@@ -206,9 +206,9 @@ const filteredProducts = computed(() => {
     :loading="isLoading_productModels"
     :hide-default-footer="!productModels?.length || isLoading_productModels"
   >
-    <template #item="{ item }">
+    <template #item="{ item, index }">
       <tr :class="{ 'bg-red-lighten-4': item.inventory < 10 }">
-        <td>{{ toPersianDigit(item.id) }}</td>
+        <td>{{ toPersianDigit(index + 1) }}</td>
         <td>{{ item.category.name }}</td>
         <td>{{ item.product.name }}</td>
         <td>{{ item.weight.name }}</td>

@@ -8,7 +8,7 @@ import { reactive } from "vue";
 
 const weight = reactive({
   headers: [
-    { title: "شناسه", key: "id" },
+    { title: "", key: "row", sortable: false },
     { title: "نام", key: "name" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
   ],
@@ -136,7 +136,7 @@ async function deleteItem(item) {
     :loading="isLoading_weights"
     :hide-default-footer="!weights?.length || isLoading_weights"
   >
-    <template #item.id="{ item }">{{ toPersianDigit(item.id) }}</template>
+    <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template>
 
     <template #item.actions="{ item }">
       <div class="d-flex justify-center">
