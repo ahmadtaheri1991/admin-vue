@@ -36,17 +36,15 @@ const pond = ref(null);
 const files = ref([]);
 const acceptedFileTypes = ["image/jpeg", "image/png"];
 
-// const handleFilePondInit = () => {
-
-// };
-
 const handleFilePondAddFile = (error, { file }) => {
   if (error) {
     console.error("Error adding file", error);
     return;
   }
-  isImageTouched.value = true;
-  dialog.form.image = file;
+  if (file instanceof File) {
+    isImageTouched.value = true;
+    dialog.form.image = file;
+  }
 };
 
 const handleFilePondRemoveFile = (error, file) => {
@@ -54,7 +52,9 @@ const handleFilePondRemoveFile = (error, file) => {
     console.error("Error removing file", error);
     return;
   }
+  files.value = [];
   dialog.form.image = null;
+  isImageTouched.value = true;
 };
 
 const {
@@ -183,6 +183,8 @@ const dialog = reactive({
     image: null,
   },
   async open(item) {
+    isImageTouched.value = false;
+    files.value = [];
     this.canBeShown = true;
     this.item = null;
     await nextTick();
@@ -192,8 +194,6 @@ const dialog = reactive({
       this.item = item;
       this.form.name = item.name;
       files.value = [item.imageUrl];
-    } else {
-      files.value = [];
     }
   },
   close() {
@@ -207,26 +207,13 @@ const dialog = reactive({
     createCategory(formData);
   },
   update() {
+    if (!this.form.image && isImageTouched.value) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
     if (this.form.image?.name) formData.append("image", this.form.image);
     updateCategory({ id: this.item.id, body: formData });
   },
 });
-
-watch(
-  () => dialog.canBeShown,
-  (val) => {
-    if (!val) isImageTouched.value = false;
-  }
-);
-
-watch(
-  () => dialog.form.image,
-  (val) => {
-    console.log(val);
-  }
-);
 
 const productSection = reactive({
   canBeShown: false,
@@ -503,7 +490,6 @@ function addProductHandler(item) {
                 :accepted-file-types="acceptedFileTypes"
                 :files="files"
                 label-idle="تصویر"
-                @init="handleFilePondInit"
                 @addfile="handleFilePondAddFile"
                 @removefile="handleFilePondRemoveFile"
               />
@@ -542,7 +528,7 @@ function addProductHandler(item) {
             color="primary"
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createCategory || isLoading_updateCategory"
-            @click="isImageTouched = true"
+            @click="if (!dialog.item) isImageTouched = true;"
           />
 
           <v-btn

@@ -3,6 +3,75 @@ import { useAppStore } from "@/stores/app";
 import { areYouSure } from "@/utils/functions";
 import axios from "@/axios";
 import { required, requiredArray } from "@/utils/formRules";
+import vueFilePond from "vue-filepond";
+import "filepond/dist/filepond.min.css";
+import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css";
+import FilePondPluginImagePreview from "filepond-plugin-image-preview";
+import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
+import { reactive, watch } from "vue";
+
+// Create FilePond component
+const FilePond = vueFilePond(
+  FilePondPluginImagePreview,
+  FilePondPluginFileValidateType
+);
+
+const isImagesTouched = ref(false);
+const pond = ref(null);
+const files = ref([]);
+const acceptedFileTypes = ["image/jpeg", "image/png"];
+
+const handleFilePondAddFile = (error, { file }) => {
+  if (error) {
+    console.error("Error adding file", error);
+    return;
+  }
+  if (file instanceof File) {
+    isImagesTouched.value = true;
+    dialog.form.images.push(file);
+  }
+};
+
+const handleFilePondRemoveFile = (error, { file }) => {
+  if (error) {
+    console.error("Error removing file", error);
+    return;
+  }
+  if (dialog.item) {
+    const id = dialog.item.productImages.find(
+      (x) => x.imageUrl.indexOf(file.name) > -1
+    ).id;
+    dialog.deletedImageIds.push(id);
+    files.value = files.value.filter((x) => x.indexOf(file.name) == -1);
+  }
+  dialog.form.images = dialog.form.images.filter((x) => x != file);
+  isImagesTouched.value = true;
+};
+
+const coverImagePond = ref(null);
+const coverImage = reactive({
+  isTouched: false,
+  files: [],
+  handleFilePondAddFile(error, { file }) {
+    if (error) {
+      console.error("Error adding file", error);
+      return;
+    }
+    if (file instanceof File) {
+      this.isTouched = true;
+      dialog.form.coverImage = file;
+    }
+  },
+  handleFilePondRemoveFile(error, { file }) {
+    if (error) {
+      console.error("Error removing file", error);
+      return;
+    }
+    this.files = [];
+    dialog.form.coverImage = null;
+    this.isTouched = true;
+  },
+});
 
 const headers_product = [
   { title: "شناسه", key: "id" },
@@ -71,7 +140,8 @@ const { mutate: createProduct, isPending: isLoading_createProduct } =
 
 const { mutate: updateProduct, isPending: isLoading_updateProduct } =
   useMutation({
-    mutationFn: ({ id, body }) => axios.patch(`products/${id}`, body),
+    mutationFn: ({ id, body, params }) =>
+      axios.patch(`products/${id}`, body, { params }),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت ویرایش شد");
       refetch_products();
@@ -152,6 +222,7 @@ const deletingItemId = ref(0);
 const dialog = reactive({
   canBeShown: false,
   item: null,
+  deletedImageIds: [],
   formRef: null,
   form: {
     name: "",
@@ -161,6 +232,11 @@ const dialog = reactive({
     description: "",
   },
   async open(item) {
+    isImagesTouched.value = false;
+    files.value = [];
+    this.deletedImageIds = [];
+    coverImage.isTouched = false;
+    coverImage.files = [];
     this.canBeShown = true;
     this.item = null;
     await nextTick();
@@ -172,12 +248,19 @@ const dialog = reactive({
       this.form.name = item.name;
       this.form.category = item.categoryId;
       this.form.description = item.description;
+      coverImage.files = [
+        item.productImages.find((x) => x.isCoverImage).imageUrl,
+      ];
+      files.value = item.productImages
+        .filter((x) => !x.isCoverImage)
+        .map((x) => x.imageUrl);
     }
   },
   close() {
     this.canBeShown = false;
   },
   add() {
+    if (!this.form.coverImage || !this.form.images.length) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
     formData.append("categoryId", this.form.category);
@@ -190,6 +273,8 @@ const dialog = reactive({
     createProduct(formData);
   },
   update() {
+    if (!this.form.coverImage && coverImage.isTouched) return;
+    if (!this.form.images.length && !files.value.length) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
     formData.append("categoryId", this.form.category);
@@ -203,7 +288,11 @@ const dialog = reactive({
       formData.append("image", this.form.coverImage);
     }
 
-    updateProduct({ id: this.item.id, body: formData });
+    const options = { id: this.item.id, body: formData };
+    if (this.deletedImageIds.length) {
+      options.params = { deletedImageIds: this.deletedImageIds };
+    }
+    updateProduct(options);
   },
 });
 
@@ -485,24 +574,52 @@ function addProductModelHandler(item) {
             </v-col>
 
             <v-col cols="12" sm="6" md="4">
-              <v-file-input
-                v-model="dialog.form.coverImage"
-                prepend-icon=""
-                label="تصویر اصلی"
-                variant="outlined"
-                :rules="[dialog.item ? null : requiredArray]"
+              <file-pond
+                :class="{
+                  error: dialog.form.coverImage == null && coverImage.isTouched,
+                }"
+                ref="coverImagePond"
+                :credits="false"
+                :accepted-file-types="acceptedFileTypes"
+                :files="coverImage.files"
+                label-idle="تصویر اصلی"
+                @addfile="coverImage.handleFilePondAddFile()"
+                @removefile="coverImage.handleFilePondRemoveFile()"
               />
+              <div
+                v-if="dialog.form.coverImage == null && coverImage.isTouched"
+                class="fs-12 mt-n2 mr-4 text-error"
+              >
+                الزامی
+              </div>
             </v-col>
 
-            <v-col cols="12" sm="6" md="4">
-              <v-file-input
-                v-model="dialog.form.images"
-                prepend-icon=""
-                label="تصاویر"
-                variant="outlined"
-                :rules="[dialog.item ? null : requiredArray]"
-                multiple
+            <v-col cols="12">
+              <file-pond
+                class="grid"
+                :class="{
+                  error:
+                    !dialog.form.images.length &&
+                    !files.length &&
+                    isImagesTouched,
+                }"
+                ref="pond"
+                :credits="false"
+                :accepted-file-types="acceptedFileTypes"
+                :files="files"
+                label-idle="تصاویر"
+                allow-multiple
+                @addfile="handleFilePondAddFile"
+                @removefile="handleFilePondRemoveFile"
               />
+              <div
+                v-if="
+                  !dialog.form.images.length && !files.length && isImagesTouched
+                "
+                class="fs-12 mt-n2 mr-4 text-error"
+              >
+                الزامی
+              </div>
             </v-col>
 
             <v-col cols="12">
@@ -531,6 +648,12 @@ function addProductModelHandler(item) {
             color="primary"
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createProduct || isLoading_updateProduct"
+            @click="
+              if (!dialog.item) {
+                coverImage.isTouched = true;
+                isImagesTouched = true;
+              }
+            "
           />
 
           <v-btn
