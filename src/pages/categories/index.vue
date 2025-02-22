@@ -202,7 +202,8 @@ const { mutate: createProduct, isPending: isLoading_createProduct } =
 
 const { mutate: updateProduct, isPending: isLoading_updateProduct } =
   useMutation({
-    mutationFn: ({ id, body }) => axios.patch(`products/${id}`, body),
+    mutationFn: ({ id, body, params }) =>
+      axios.patch(`products/${id}`, body, { params }),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت ویرایش شد");
       productSection.clear();
@@ -332,7 +333,11 @@ const productSection = reactive({
     formData.append("name", this.form.name);
     formData.append("categoryId", this.form.category);
     formData.append("description", this.form.description);
-    if (this.form.images.length) formData.append("gallery", this.form.images);
+    if (this.form.images.length) {
+      this.form.images.forEach((image) => {
+        formData.append("gallery", image);
+      });
+    }
     if (this.form.coverImage?.name)
       formData.append("image", this.form.coverImage);
 
