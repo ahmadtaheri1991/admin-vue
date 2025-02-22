@@ -3,7 +3,7 @@ import axios from "@/axios";
 import { areYouSure } from "@/utils/functions";
 import { required, requiredArray } from "@/utils/formRules";
 
-import { ref } from "vue";
+import { nextTick, ref } from "vue";
 import vueFilePond from "vue-filepond";
 import "filepond/dist/filepond.min.css";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css";
@@ -35,6 +35,65 @@ const showProduct = ref(false);
 const pond = ref(null);
 const files = ref([]);
 const acceptedFileTypes = ["image/jpeg", "image/png"];
+
+const coverImagePond = ref(null);
+const imagesPond = ref(null);
+
+const coverImage = reactive({
+  isTouched: false,
+  files: [],
+  handleFilePondAddFile(error, { file }) {
+    if (error) {
+      console.error("Error adding file", error);
+      return;
+    }
+    if (file instanceof File) {
+      this.isTouched = true;
+      productSection.form.coverImage = file;
+    }
+  },
+  handleFilePondRemoveFile(error, { file }) {
+    if (error) {
+      console.error("Error removing file", error);
+      return;
+    }
+    this.files = [];
+    productSection.form.coverImage = null;
+    this.isTouched = true;
+  },
+});
+
+const images = reactive({
+  isTouched: false,
+  files: [],
+  handleFilePondAddFile(error, { file }) {
+    if (error) {
+      console.error("Error adding file", error);
+      return;
+    }
+    if (file instanceof File) {
+      this.isTouched = true;
+      productSection.form.images.push(file);
+    }
+  },
+  handleFilePondRemoveFile(error, { file }) {
+    if (error) {
+      console.error("Error removing file", error);
+      return;
+    }
+    if (productSection.item) {
+      const id = productSection.item.productImages.find(
+        (x) => x.imageUrl.indexOf(file.name) > -1
+      ).id;
+      productSection.deletedImageIds.push(id);
+      this.files = this.files.filter((x) => x.indexOf(file.name) == -1);
+    }
+    productSection.form.images = productSection.form.images.filter(
+      (x) => x != file
+    );
+    this.isTouched = true;
+  },
+});
 
 const handleFilePondAddFile = (error, { file }) => {
   if (error) {
@@ -129,7 +188,8 @@ const { mutate: createProduct, isPending: isLoading_createProduct } =
     mutationFn: (body) => axios.post("products", body),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت افزوده شد");
-      productSection.formRef.reset();
+      // productSection.formRef.reset();
+      productSection.clear();
       refetch_products();
     },
     onError: (error) => {
@@ -217,6 +277,7 @@ const dialog = reactive({
 
 const productSection = reactive({
   canBeShown: false,
+  deletedImageIds: [],
   item: null,
   formRef: null,
   form: {
@@ -227,6 +288,11 @@ const productSection = reactive({
     description: "",
   },
   async open(item) {
+    images.isTouched = false;
+    images.files = [];
+    this.deletedImageIds = [];
+    coverImage.isTouched = false;
+    coverImage.files = [];
     this.canBeShown = true;
     this.item = null;
     await nextTick();
@@ -238,9 +304,16 @@ const productSection = reactive({
       this.form.name = item.name;
       this.form.category = item.categoryId;
       this.form.description = item.description;
+      coverImage.files = [
+        item.productImages.find((x) => x.isCoverImage).imageUrl,
+      ];
+      images.files = item.productImages
+        .filter((x) => !x.isCoverImage)
+        .map((x) => x.imageUrl);
     }
   },
   add() {
+    if (!this.form.coverImage || !this.form.images.length) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
     formData.append("categoryId", selectedCat.value.id);
@@ -253,6 +326,8 @@ const productSection = reactive({
     createProduct(formData);
   },
   update() {
+    if (!this.form.coverImage && coverImage.isTouched) return;
+    if (!this.form.images.length && !images.files.length) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
     formData.append("categoryId", this.form.category);
@@ -261,13 +336,24 @@ const productSection = reactive({
     if (this.form.coverImage?.name)
       formData.append("image", this.form.coverImage);
 
-    updateProduct({ id: this.item.id, body: formData });
+    const options = { id: this.item.id, body: formData };
+    if (this.deletedImageIds.length) {
+      options.params = { deletedImageIds: this.deletedImageIds };
+    }
+    updateProduct(options);
   },
   clear() {
     this.item = null;
     this.formRef?.reset();
+    images.files = [];
+    coverImage.files = [];
     this.form.coverImage = null;
     this.form.images = [];
+    this.deletedImageIds = [];
+    setTimeout(() => {
+      images.isTouched = false;
+      coverImage.isTouched = false;
+    }, 100);
   },
 });
 
@@ -292,6 +378,11 @@ async function deleteProductItem(item) {
 function addProductHandler(item) {
   selectedCat.value = item;
   showProduct.value = true;
+  images.isTouched = false;
+  images.files = [];
+  productSection.deletedImageIds = [];
+  coverImage.isTouched = false;
+  coverImage.files = [];
 }
 </script>
 
@@ -369,24 +460,68 @@ function addProductHandler(item) {
             </v-col>
 
             <v-col cols="12" sm="6" md="4">
-              <v-file-input
-                v-model="productSection.form.coverImage"
-                prepend-icon=""
-                label="تصویر اصلی"
-                variant="outlined"
-                :rules="[productSection.item ? null : requiredArray]"
+              <file-pond
+                :class="{
+                  error:
+                    productSection.form.coverImage == null &&
+                    coverImage.isTouched,
+                }"
+                ref="coverImagePond"
+                :credits="false"
+                :accepted-file-types="acceptedFileTypes"
+                :files="coverImage.files"
+                label-idle="تصویر اصلی"
+                @addfile="
+                  (err, file) => coverImage.handleFilePondAddFile(err, file)
+                "
+                @removefile="
+                  (err, file) => coverImage.handleFilePondRemoveFile(err, file)
+                "
               />
+              <div
+                v-if="
+                  productSection.form.coverImage == null && coverImage.isTouched
+                "
+                class="fs-12 px-4 text-error"
+                style="padding-top: 6px"
+              >
+                الزامی
+              </div>
             </v-col>
 
             <v-col cols="12" sm="6" md="4">
-              <v-file-input
-                v-model="productSection.form.images"
-                prepend-icon=""
-                label="تصاویر"
-                variant="outlined"
-                :rules="[productSection.item ? null : requiredArray]"
-                multiple
+              <file-pond
+                class="grid"
+                :class="{
+                  error:
+                    !productSection.form.images.length &&
+                    !images.files.length &&
+                    images.isTouched,
+                }"
+                ref="imagesPond"
+                :credits="false"
+                :accepted-file-types="acceptedFileTypes"
+                :files="images.files"
+                label-idle="تصاویر"
+                allow-multiple
+                @addfile="
+                  (err, file) => images.handleFilePondAddFile(err, file)
+                "
+                @removefile="
+                  (err, file) => images.handleFilePondRemoveFile(err, file)
+                "
               />
+              <div
+                v-if="
+                  !productSection.form.images.length &&
+                  !images.files.length &&
+                  images.isTouched
+                "
+                class="fs-12 px-4 text-error"
+                style="padding-top: 6px"
+              >
+                الزامی
+              </div>
             </v-col>
 
             <v-col cols="12">
@@ -416,6 +551,12 @@ function addProductHandler(item) {
             color="primary"
             :text="productSection.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createProduct || isLoading_updateProduct"
+            @click="
+              if (!productSection.item) {
+                coverImage.isTouched = true;
+                images.isTouched = true;
+              }
+            "
           />
 
           <v-btn
@@ -495,21 +636,12 @@ function addProductHandler(item) {
               />
               <div
                 v-if="dialog.form.image == null && isImageTouched"
-                class="fs-12 mt-n2 mr-4 text-error"
+                class="fs-12 px-4 text-error"
+                style="padding-top: 6px"
               >
                 الزامی
               </div>
             </v-col>
-
-            <!-- <v-col cols="12">
-              <v-file-input
-                v-model="dialog.form.image"
-                prepend-icon=""
-                label="تصویر"
-                variant="outlined"
-                :rules="[dialog.item ? null : requiredArray]"
-              />
-            </v-col> -->
           </v-row>
         </v-card-text>
 

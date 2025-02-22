@@ -583,12 +583,17 @@ function addProductModelHandler(item) {
                 :accepted-file-types="acceptedFileTypes"
                 :files="coverImage.files"
                 label-idle="تصویر اصلی"
-                @addfile="coverImage.handleFilePondAddFile()"
-                @removefile="coverImage.handleFilePondRemoveFile()"
+                @addfile="
+                  (err, file) => coverImage.handleFilePondAddFile(err, file)
+                "
+                @removefile="
+                  (err, file) => coverImage.handleFilePondRemoveFile(err, file)
+                "
               />
               <div
                 v-if="dialog.form.coverImage == null && coverImage.isTouched"
-                class="fs-12 mt-n2 mr-4 text-error"
+                class="fs-12 px-4 text-error"
+                style="padding-top: 6px"
               >
                 الزامی
               </div>
@@ -616,7 +621,8 @@ function addProductModelHandler(item) {
                 v-if="
                   !dialog.form.images.length && !files.length && isImagesTouched
                 "
-                class="fs-12 mt-n2 mr-4 text-error"
+                class="fs-12 px-4 text-error"
+                style="padding-top: 6px"
               >
                 الزامی
               </div>

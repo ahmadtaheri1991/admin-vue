@@ -65,3 +65,11 @@ p {
   border: 1px solid #b00020;
   border-radius: 0.5em;
 }
+
+.filepond--root {
+  margin-bottom: 0 !important;
+
+  .filepond--drop-label {
+    min-height: 58px !important;
+  }
+}
