@@ -465,7 +465,7 @@ function print(item) {
     </template>
 
     <template #item.actions="{ item }">
-      <div class="d-flex justify-center">
+      <div class="d-flex justify-center align-center">
         <v-btn
           class="ml-5"
           color="primary"
@@ -554,7 +554,7 @@ function print(item) {
     </template>
 
     <template #item.actions="{ item }">
-      <div class="d-flex justify-center">
+      <div class="d-flex justify-center align-center">
         <v-btn
           class="ml-5"
           color="primary"
@@ -643,7 +643,7 @@ function print(item) {
     </template>
 
     <template #item.actions="{ item }">
-      <div class="d-flex justify-center">
+      <div class="d-flex justify-center align-center">
         <v-btn
           class="ml-5"
           color="primary"
@@ -893,7 +893,7 @@ function print(item) {
               <v-select
                 v-model="orderItemDialog.form.productModel"
                 :items="filteredProductModels"
-                label="مدل محصول"
+                label="بسته‌بندی محصول"
                 :rules="[required]"
                 clearable
                 return-object

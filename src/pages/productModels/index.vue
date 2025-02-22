@@ -191,7 +191,7 @@ const filteredProducts = computed(() => {
   <v-btn
     class="mb-3"
     color="primary"
-    text="افزودن مدل محصول"
+    text="افزودن بسته‌بندی محصول"
     @click="dialog.open()"
   />
 
@@ -239,7 +239,7 @@ const filteredProducts = computed(() => {
         @valid="dialog.item ? dialog.update() : dialog.add()"
       >
         <v-card-title>{{
-          dialog.item ? "ویرایش مدل محصول" : "افزودن مدل محصول"
+          dialog.item ? "ویرایش بسته‌بندی محصول" : "افزودن بسته‌بندی محصول"
         }}</v-card-title>
 
         <v-card-text>

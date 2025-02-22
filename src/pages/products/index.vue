@@ -410,10 +410,10 @@ function addProductModelHandler(item) {
       </template>
 
       <template #item.actions="{ item }">
-        <div class="d-flex justify-center">
+        <div class="d-flex justify-center align-center">
           <v-btn
             class="mx-1"
-            text="افزودن مدل محصول"
+            text="افزودن بسته‌بندی محصول"
             color="primary"
             @click="addProductModelHandler(item)"
           />
