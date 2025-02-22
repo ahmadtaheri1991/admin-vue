@@ -103,3 +103,21 @@ p {
   color: white !important;
   width: 100px;
 }
+
+.grid .filepond--item {
+  width: calc(33% - 0.5em);
+  height: 100%;
+}
+
+.error .filepond--drop-label {
+  border: 1px solid #b00020;
+  border-radius: 0.5em;
+}
+
+.filepond--root {
+  margin-bottom: 0 !important;
+
+  .filepond--drop-label {
+    min-height: 58px !important;
+  }
+}
