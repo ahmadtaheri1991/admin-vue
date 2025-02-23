@@ -211,24 +211,22 @@ const filteredProducts = computed(() => {
     <template #group-header="{ item, columns, toggleGroup, isGroupOpen }">
       <tr>
         <td>
-          <v-btn
-            :icon="isGroupOpen(item) ? '$expand' : '$prev'"
-            size="small"
-            rounded="circle"
-            variant="text"
-            @click="toggleGroup(item)"
-          />
-          {{ item.value }}
+          <div class="d-flex align-center">
+            <v-btn
+              :icon="isGroupOpen(item) ? '$expand' : '$prev'"
+              size="small"
+              rounded="circle"
+              variant="text"
+              @click="toggleGroup(item)"
+            />
+            <span style="white-space: nowrap">{{ item.value }}</span>
+          </div>
         </td>
-        <td colspan="5" />
+        <td :colspan="columns.length - 1" />
       </tr>
     </template>
 
-    <template #header.data-table-group="{ items, isOpen, toggle, columns }">
-      <tr>
-        <td>محصول</td>
-      </tr>
-    </template>
+    <template #header.data-table-group> محصول </template>
 
     <!-- <td>{{ toPersianDigit(index + 1) }}</td> -->
     <!-- <td>{{ item.product.name }}</td> -->
