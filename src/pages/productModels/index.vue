@@ -11,8 +11,8 @@ import { required } from "@/utils/formRules";
 
 const productModel = reactive({
   headers: [
-    { title: "", key: "row", sortable: false },
-    { title: "محصول", key: "product" },
+    // { title: "", key: "row", sortable: false },
+    // { title: "محصول", key: "product" },
     { title: "دسته‌بندی", key: "category" },
     { title: "بسته‌بندی", key: "weight" },
     { title: "قیمت", key: "price", align: "center" },
@@ -196,6 +196,8 @@ const filteredProducts = computed(() => {
   />
 
   <v-data-table
+    :group-by="[{ key: 'product.name', order: 'asc' }]"
+    item-value="product"
     :headers="productModel.headers"
     :items="productModels"
     :page="productModel.page"
@@ -206,11 +208,34 @@ const filteredProducts = computed(() => {
     :loading="isLoading_productModels"
     :hide-default-footer="!productModels?.length || isLoading_productModels"
   >
+    <template #group-header="{ item, columns, toggleGroup, isGroupOpen }">
+      <tr>
+        <td>
+          <v-btn
+            :icon="isGroupOpen(item) ? '$expand' : '$prev'"
+            size="small"
+            rounded="circle"
+            variant="text"
+            @click="toggleGroup(item)"
+          />
+          {{ item.value }}
+        </td>
+        <td colspan="5" />
+      </tr>
+    </template>
+
+    <template #header.data-table-group="{ items, isOpen, toggle, columns }">
+      <tr>
+        <td>محصول</td>
+      </tr>
+    </template>
+
+    <!-- <td>{{ toPersianDigit(index + 1) }}</td> -->
+    <!-- <td>{{ item.product.name }}</td> -->
     <template #item="{ item, index }">
       <tr :class="{ 'bg-red-lighten-4': item.inventory < 10 }">
-        <td>{{ toPersianDigit(index + 1) }}</td>
+        <td></td>
         <td>{{ item.category.name }}</td>
-        <td>{{ item.product.name }}</td>
         <td>{{ item.weight.name }}</td>
         <td class="text-center">
           {{ toPersianNumber(numberWithCommas(item.price)) }}
