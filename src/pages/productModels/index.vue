@@ -208,8 +208,19 @@ const filteredProducts = computed(() => {
     :loading="isLoading_productModels"
     :hide-default-footer="!productModels?.length || isLoading_productModels"
   >
-    <template #group-header="{ item, columns, toggleGroup, isGroupOpen }">
-      <tr>
+    <template
+      #group-header="{ item, index, columns, toggleGroup, isGroupOpen }"
+    >
+      <tr
+        style="padding-bottom: 1px !important"
+        :style="{
+          backgroundColor: item.items.some((x) => x.raw.inventory < 10)
+            ? '#ffcdd2'
+            : index % 2 == 0
+            ? '#f4f4f5'
+            : '',
+        }"
+      >
         <td>
           <div class="d-flex align-center">
             <v-btn
@@ -222,8 +233,10 @@ const filteredProducts = computed(() => {
             <span style="white-space: nowrap">{{ item.value }}</span>
           </div>
         </td>
+
         <td :colspan="columns.length - 1" />
       </tr>
+      <div style="height: 1px" />
     </template>
 
     <template #header.data-table-group> محصول </template>
@@ -231,7 +244,12 @@ const filteredProducts = computed(() => {
     <!-- <td>{{ toPersianDigit(index + 1) }}</td> -->
     <!-- <td>{{ item.product.name }}</td> -->
     <template #item="{ item, index }">
-      <tr :class="{ 'bg-red-lighten-4': item.inventory < 10 }">
+      <tr
+        :style="{
+          backgroundColor:
+            item.inventory < 10 ? '#ffcdd2' : index % 2 == 0 ? '#f4f4f5' : '',
+        }"
+      >
         <td></td>
         <td>{{ item.category.name }}</td>
         <td>{{ item.weight.name }}</td>
@@ -252,6 +270,7 @@ const filteredProducts = computed(() => {
           </div>
         </td>
       </tr>
+      <div style="height: 1px" />
     </template>
   </v-data-table>
 
