@@ -1014,7 +1014,7 @@ function print(item) {
       <div style="height: 72px" class="d-flex px-6 py-4 flex-wrap align-center">
         <v-spacer />
 
-        <v-cancel-btn @click="printDialog.close()" />
+        <v-cancel-btn class="d-print-none" @click="printDialog.close()" />
       </div>
     </v-card>
   </v-dialog>
