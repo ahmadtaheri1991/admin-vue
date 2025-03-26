@@ -6,7 +6,11 @@ import vueFilePond from "vue-filepond";
 import "filepond/dist/filepond.min.css";
 import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css";
 import FilePondPluginImagePreview from "filepond-plugin-image-preview";
+import FilePondPluginImageEdit from "filepond-plugin-image-edit";
 import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
+import "vue-advanced-cropper/dist/style.css";
+import { Cropper } from "vue-advanced-cropper";
+import imageCompression from "browser-image-compression";
 
 const category = reactive({
   headers: [
@@ -32,8 +36,25 @@ const product = reactive({
 // Create FilePond component
 const FilePond = vueFilePond(
   FilePondPluginImagePreview,
-  FilePondPluginFileValidateType
+  FilePondPluginFileValidateType,
+  FilePondPluginImageEdit
 );
+
+const imageEditEditor = {
+  open: async (file) => {
+    currentImage.value = URL.createObjectURL(file);
+    showCropper.value = true;
+  },
+  close: () => {
+    showCropper.value = false;
+    currentImage.value = null;
+  },
+};
+
+const showCropper = ref(false);
+const currentImage = ref(null);
+const cropperRef = ref(null);
+const originalFile = ref(null);
 
 const appStore = useAppStore();
 const showProduct = ref(false);
@@ -42,66 +63,32 @@ const pond = ref(null);
 const files = ref([]);
 const acceptedFileTypes = ["image/jpeg", "image/png"];
 
-const coverImagePond = ref(null);
-const imagesPond = ref(null);
-
-const coverImage = reactive({
-  isTouched: false,
-  files: [],
-  handleFilePondAddFile(error, { file }) {
-    if (error) {
-      console.error("Error adding file", error);
-      return;
-    }
-    if (file instanceof File) {
-      this.isTouched = true;
-      productSection.form.coverImage = file;
-    }
-  },
-  handleFilePondRemoveFile(error, { file }) {
-    if (error) {
-      console.error("Error removing file", error);
-      return;
-    }
-    this.files = [];
-    productSection.form.coverImage = null;
-    this.isTouched = true;
-  },
+const compressionSettings = reactive({
+  maxSizeMB: 1,
+  maxWidthOrHeight: 1920,
+  initialQuality: 0.8,
+  showDialog: false,
 });
 
-const images = reactive({
-  isTouched: false,
-  files: [],
-  handleFilePondAddFile(error, { file }) {
-    if (error) {
-      console.error("Error adding file", error);
-      return;
-    }
-    if (file instanceof File) {
-      this.isTouched = true;
-      productSection.form.images.push(file);
-    }
-  },
-  handleFilePondRemoveFile(error, { file }) {
-    if (error) {
-      console.error("Error removing file", error);
-      return;
-    }
-    if (productSection.item) {
-      const id = productSection.item.productImages.find(
-        (x) => x.imageUrl.indexOf(file.name) > -1
-      ).id;
-      productSection.deletedImageIds.push(id);
-      this.files = this.files.filter((x) => x.indexOf(file.name) == -1);
-    }
-    productSection.form.images = productSection.form.images.filter(
-      (x) => x != file
-    );
-    this.isTouched = true;
-  },
-});
+const compressImage = async (file) => {
+  const options = {
+    maxSizeMB: compressionSettings.maxSizeMB,
+    maxWidthOrHeight: compressionSettings.maxWidthOrHeight,
+    useWebWorker: true,
+    fileType: "image/jpeg",
+    initialQuality: compressionSettings.initialQuality,
+  };
 
-const handleFilePondAddFile = (error, { file }) => {
+  try {
+    const compressedFile = await imageCompression(file, options);
+    return compressedFile;
+  } catch (error) {
+    console.error("خطا در فشرده‌سازی تصویر:", error);
+    return file;
+  }
+};
+
+const handleFilePondAddFile = async (error, { file }) => {
   if (error) {
     console.error("Error adding file", error);
     return;
@@ -109,6 +96,8 @@ const handleFilePondAddFile = (error, { file }) => {
   if (file instanceof File) {
     isImageTouched.value = true;
     dialog.form.image = file;
+    originalFile.value = file;
+    files.value = [file];
   }
 };
 
@@ -120,6 +109,7 @@ const handleFilePondRemoveFile = (error, file) => {
   files.value = [];
   dialog.form.image = null;
   isImageTouched.value = true;
+  originalFile.value = null;
 };
 
 const {
@@ -260,7 +250,11 @@ const dialog = reactive({
     if (item) {
       this.item = item;
       this.form.name = item.name;
-      files.value = [item.imageUrl];
+      files.value = [
+        item.imageUrl.startsWith("http")
+          ? item.imageUrl
+          : `https://back.mazeresoon.ir/${item.imageUrl}`,
+      ];
     }
   },
   close() {
@@ -398,6 +392,99 @@ function addProductHandler(item) {
   coverImage.isTouched = false;
   coverImage.files = [];
 }
+
+// وقتی برش انجام شد
+const onCrop = async ({ canvas }) => {
+  canvas.toBlob(
+    async (blob) => {
+      const fileName = originalFile.value?.name || "cropped-image.jpg";
+      const file = new File([blob], fileName, {
+        type: "image/jpeg",
+        lastModified: new Date().getTime(),
+      });
+
+      // فشرده‌سازی تصویر با تنظیمات جدید
+      const compressedFile = await compressImage(file);
+
+      // ایجاد یک فایل جدید با همان نام و تاریخ
+      const newFile = new File([compressedFile], fileName, {
+        type: "image/jpeg",
+        lastModified: new Date().getTime(),
+      });
+
+      // ذخیره در فرم
+      dialog.form.image = newFile;
+
+      // به‌روزرسانی FilePond
+      files.value = [];
+      await nextTick();
+      files.value = [newFile];
+
+      showCropper.value = false;
+    },
+    "image/jpeg",
+    0.9
+  );
+};
+
+const coverImagePond = ref(null);
+const imagesPond = ref(null);
+
+const coverImage = reactive({
+  isTouched: false,
+  files: [],
+  handleFilePondAddFile(error, { file }) {
+    if (error) {
+      console.error("Error adding file", error);
+      return;
+    }
+    if (file instanceof File) {
+      this.isTouched = true;
+      productSection.form.coverImage = file;
+    }
+  },
+  handleFilePondRemoveFile(error, { file }) {
+    if (error) {
+      console.error("Error removing file", error);
+      return;
+    }
+    this.files = [];
+    productSection.form.coverImage = null;
+    this.isTouched = true;
+  },
+});
+
+const images = reactive({
+  isTouched: false,
+  files: [],
+  handleFilePondAddFile(error, { file }) {
+    if (error) {
+      console.error("Error adding file", error);
+      return;
+    }
+    if (file instanceof File) {
+      this.isTouched = true;
+      productSection.form.images.push(file);
+    }
+  },
+  handleFilePondRemoveFile(error, { file }) {
+    if (error) {
+      console.error("Error removing file", error);
+      return;
+    }
+    if (productSection.item) {
+      const id = productSection.item.productImages.find(
+        (x) => x.imageUrl.indexOf(file.name) > -1
+      ).id;
+      productSection.deletedImageIds.push(id);
+      this.files = this.files.filter((x) => x.indexOf(file.name) == -1);
+    }
+    productSection.form.images = productSection.form.images.filter(
+      (x) => x != file
+    );
+    this.isTouched = true;
+  },
+});
 </script>
 
 <template>
@@ -486,6 +573,7 @@ function addProductHandler(item) {
                 :accepted-file-types="acceptedFileTypes"
                 :files="coverImage.files"
                 label-idle="تصویر اصلی"
+                :image-edit-editor="imageEditEditor"
                 @addfile="
                   (err, file) => coverImage.handleFilePondAddFile(err, file)
                 "
@@ -519,6 +607,7 @@ function addProductHandler(item) {
                 :files="images.files"
                 label-idle="تصاویر"
                 allow-multiple
+                :image-edit-editor="imageEditEditor"
                 @addfile="
                   (err, file) => images.handleFilePondAddFile(err, file)
                 "
@@ -633,6 +722,7 @@ function addProductHandler(item) {
                 :accepted-file-types="acceptedFileTypes"
                 :files="files"
                 label-idle="تصویر"
+                :image-edit-editor="imageEditEditor"
                 @addfile="handleFilePondAddFile"
                 @removefile="handleFilePondRemoveFile"
               />
@@ -665,4 +755,95 @@ function addProductHandler(item) {
       </custom-form>
     </v-card>
   </v-dialog>
+
+  <!-- حذف دیالوگ‌های قبلی و اضافه کردن دیالوگ جدید -->
+  <v-dialog v-model="showCropper" max-width="1200" class="image-editor-dialog">
+    <v-card>
+      <v-card-title class="py-2">ویرایش تصویر</v-card-title>
+      <v-card-text class="pa-2">
+        <v-row no-gutters>
+          <v-col cols="12" md="7" class="pa-2">
+            <div class="cropper-container">
+              <cropper
+                ref="cropperRef"
+                :src="currentImage"
+                :stencil-props="{ aspectRatio: 1 }"
+                class="cropper"
+              />
+            </div>
+          </v-col>
+
+          <v-col cols="12" md="5" class="pa-2">
+            <v-card flat class="compression-settings">
+              <v-card-title>تنظیمات فشرده‌سازی</v-card-title>
+
+              <v-card-text class="py-0">
+                <div class="text-caption">حداکثر حجم (مگابایت)</div>
+                <v-slider
+                  v-model="compressionSettings.maxSizeMB"
+                  :min="0.1"
+                  :max="3"
+                  :step="0.1"
+                  thumb-label
+                  density="compact"
+                  class="mt-0 mb-3"
+                />
+
+                <div class="text-caption">حداکثر عرض/ارتفاع (پیکسل)</div>
+                <v-slider
+                  v-model="compressionSettings.maxWidthOrHeight"
+                  :min="100"
+                  :max="1000"
+                  :step="100"
+                  thumb-label
+                  density="compact"
+                  class="mt-0 mb-3"
+                />
+
+                <div class="text-caption">کیفیت تصویر</div>
+                <v-slider
+                  v-model="compressionSettings.initialQuality"
+                  :min="0.1"
+                  :max="1"
+                  :step="0.1"
+                  thumb-label
+                  density="compact"
+                  class="mt-0"
+                />
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-card-text>
+      <v-card-actions class="pa-4">
+        <v-spacer />
+        <v-btn color="error" @click="showCropper = false">انصراف</v-btn>
+        <v-btn color="primary" @click="onCrop(cropperRef.getResult())">
+          ذخیره
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
+
+<style scoped>
+.image-editor-dialog :deep(.cropper-container) {
+  height: 60vh;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.image-editor-dialog :deep(.cropper) {
+  height: 100%;
+  width: 100%;
+}
+
+.compression-settings {
+  height: 100%;
+  padding: 8px;
+}
+
+.compression-settings :deep(.v-slider) {
+  margin-top: 16px;
+}
+</style>

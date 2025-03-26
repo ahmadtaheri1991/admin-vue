@@ -50,7 +50,7 @@ axiosInstance.interceptors.response.use(
       } catch (err) {
         console.error("Error refreshing token", err);
         authStore.unsetTokens();
-        router.push("login");
+        router.push("/login");
         return Promise.reject(err);
       }
     }
