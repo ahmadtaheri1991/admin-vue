@@ -40,8 +40,11 @@ const FilePond = vueFilePond(
   FilePondPluginImageEdit
 );
 
+const originalFile = ref(null);
+
 const imageEditEditor = {
   open: async (file) => {
+    originalFile.value = file;
     currentImage.value = URL.createObjectURL(file);
     showCropper.value = true;
   },
@@ -54,7 +57,6 @@ const imageEditEditor = {
 const showCropper = ref(false);
 const currentImage = ref(null);
 const cropperRef = ref(null);
-const originalFile = ref(null);
 
 const appStore = useAppStore();
 const showProduct = ref(false);
@@ -96,7 +98,6 @@ const handleFilePondAddFile = async (error, { file }) => {
   if (file instanceof File) {
     isImageTouched.value = true;
     dialog.form.image = file;
-    originalFile.value = file;
     files.value = [file];
   }
 };
@@ -109,7 +110,6 @@ const handleFilePondRemoveFile = (error, file) => {
   files.value = [];
   dialog.form.image = null;
   isImageTouched.value = true;
-  originalFile.value = null;
 };
 
 const {
@@ -184,7 +184,6 @@ const { mutate: createProduct, isPending: isLoading_createProduct } =
     mutationFn: (body) => axios.post("products", body),
     onSuccess: () => {
       appStore.openAlert(0, "با موفقیت افزوده شد");
-      // productSection.formRef.reset();
       productSection.clear();
       refetch_products();
     },
@@ -259,6 +258,7 @@ const dialog = reactive({
   },
   close() {
     this.canBeShown = false;
+    this.item = null;
   },
   add() {
     if (!this.form.image) return;
@@ -412,18 +412,52 @@ const onCrop = async ({ canvas }) => {
         lastModified: new Date().getTime(),
       });
 
-      // ذخیره در فرم
-      dialog.form.image = newFile;
+      // تشخیص اینکه کدام بخش در حال ویرایش است
+      if (showCropper.value) {
+        if (
+          originalFile.value === dialog.form.image ||
+          files.value[0]?.indexOf?.(originalFile.value.name) > -1
+        ) {
+          // تصویر اصلی (دسته‌بندی)
+          pond.value?.removeFiles(); // حذف فایل‌های قبلی از FilePond
+          pond.value?.addFile(newFile); // اضافه کردن فایل جدید
+        } else if (
+          originalFile.value === productSection.form.coverImage ||
+          coverImage.files[0]?.indexOf?.(originalFile.value.name) > -1
+        ) {
+          // تصویر پوشش
+          coverImagePond.value?.removeFiles(); // حذف فایل‌های قبلی
+          coverImagePond.value?.addFile(newFile); // اضافه کردن فایل جدید
+        } else {
+          // تصاویر گالری
+          const index = productSection.form.images.indexOf(originalFile.value);
 
-      // به‌روزرسانی FilePond
-      files.value = [];
-      await nextTick();
-      files.value = [newFile];
+          if (index !== -1) {
+            productSection.form.images.splice(index, 1, newFile); // Replace in form.images
+            images.files.splice(index, 1, newFile); // Replace in files
+          } else {
+            // If not found (new file), add it
+            productSection.form.images.push(newFile);
+            images.files.push(newFile);
+          }
+          const pondFiles = imagesPond.value?.getFiles();
+          if (pondFiles?.length) {
+            const fileToRemove = pondFiles.findIndex(
+              (f) => f.file === originalFile.value
+            );
+            if (fileToRemove >= 0) {
+              imagesPond.value.removeFile(fileToRemove);
+            }
+          }
+          await nextTick();
+          imagesPond.value?.addFile(newFile);
+        }
+      }
 
       showCropper.value = false;
     },
     "image/jpeg",
-    0.9
+    1
   );
 };
 
@@ -441,6 +475,7 @@ const coverImage = reactive({
     if (file instanceof File) {
       this.isTouched = true;
       productSection.form.coverImage = file;
+      this.files = [file];
     }
   },
   handleFilePondRemoveFile(error, { file }) {
@@ -464,7 +499,10 @@ const images = reactive({
     }
     if (file instanceof File) {
       this.isTouched = true;
-      productSection.form.images.push(file);
+      if (!productSection.form.images.some((img) => img === file)) {
+        productSection.form.images.push(file);
+        this.files.push(file);
+      }
     }
   },
   handleFilePondRemoveFile(error, { file }) {
@@ -475,13 +513,16 @@ const images = reactive({
     if (productSection.item) {
       const id = productSection.item.productImages.find(
         (x) => x.imageUrl.indexOf(file.name) > -1
-      ).id;
-      productSection.deletedImageIds.push(id);
+      )?.id;
+      if (id) productSection.deletedImageIds.push(id);
       this.files = this.files.filter((x) => x.indexOf(file.name) == -1);
     }
     productSection.form.images = productSection.form.images.filter(
       (x) => x != file
     );
+    productSection.form.images.filter((x) => x.name.indexOf(file.name) == -1);
+    this.files.filter((x) => x.name.indexOf(file.name) == -1);
+
     this.isTouched = true;
   },
 });
