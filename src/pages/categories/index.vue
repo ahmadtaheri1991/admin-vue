@@ -306,11 +306,21 @@ const productSection = reactive({
       this.form.category = item.categoryId;
       this.form.description = item.description;
       coverImage.files = [
-        item.productImages.find((x) => x.isCoverImage).imageUrl,
+        item.productImages
+          .find((x) => x.isCoverImage)
+          .imageUrl.startsWith("http")
+          ? item.productImages.find((x) => x.isCoverImage).imageUrl
+          : `https://back.mazeresoon.ir/${
+              item.productImages.find((x) => x.isCoverImage).imageUrl
+            }`,
       ];
       images.files = item.productImages
         .filter((x) => !x.isCoverImage)
-        .map((x) => x.imageUrl);
+        .map((x) =>
+          x.imageUrl.startsWith("http")
+            ? x.imageUrl
+            : `https://back.mazeresoon.ir/${x.imageUrl}`
+        );
     }
   },
   add() {
