@@ -23,7 +23,7 @@ const { mutate, isPending } = useMutation({
   onSuccess: (data) => {
     authStore.setAccessToken(data.accessToken);
     authStore.setRefreshToken(data.refreshToken);
-    router.push("/");
+    router.push("/orders/pending");
   },
   onError: (error) => {
     console.log(error);
@@ -41,15 +41,7 @@ function login() {
 
 <template>
   <div
-    class="
-      bg-green-darken-4
-      pa-2
-      pt-4
-      width-120
-      height-120
-      mx-auto
-      rounded-circle
-    "
+    class="bg-green-darken-4 pa-2 pt-4 width-120 height-120 mx-auto rounded-circle"
   >
     <v-img src="/images/logo-maze.png" />
   </div>
