@@ -129,8 +129,6 @@ const dialog = reactive({
   },
 });
 
-const search = ref("");
-
 async function postHandler(item) {
   const { isConfirmed } = await areYouSure();
   if (!isConfirmed) return;

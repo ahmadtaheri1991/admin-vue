@@ -68,7 +68,7 @@ const acceptedFileTypes = ["image/jpeg", "image/png"];
 const compressionSettings = reactive({
   maxSizeMB: 1,
   maxWidthOrHeight: 1920,
-  initialQuality: 0.8,
+  initialQuality: 1,
   showDialog: false,
 });
 

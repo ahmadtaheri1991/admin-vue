@@ -2,7 +2,6 @@
 import { areYouSure, toPersianDigit } from "@/utils/functions";
 import axios from "@/axios";
 import { required } from "@/utils/formRules";
-import { nextTick } from "vue";
 import { useDisplay } from "vuetify/lib/framework.mjs";
 
 const { xs } = useDisplay();
@@ -20,48 +19,6 @@ const statusTitles = {
   posted: "پست شده",
 };
 
-const pendingOrder = reactive({
-  headers: [
-    { title: "", key: "row", sortable: false },
-    {
-      title: "نام و نام‌خانوادگی",
-      key: "fullName",
-      minWidth: 140,
-    },
-    { title: "شماره تماس", key: "phone", minWidth: 111 },
-    {
-      title: "زمان ثبت سفارش",
-      key: "createdAt",
-      align: "center",
-      minWidth: 155,
-    },
-    { title: "وضعیت", key: "status", align: "center" },
-    { title: "عملیات", key: "actions", align: "center", sortable: false },
-  ],
-  page: 1,
-  itemsPerPage: 10,
-});
-const acceptedOrder = reactive({
-  headers: [
-    { title: "", key: "row", sortable: false },
-    {
-      title: "نام و نام‌خانوادگی",
-      key: "fullName",
-      minWidth: 140,
-    },
-    { title: "شماره تماس", key: "phone", minWidth: 111 },
-    {
-      title: "زمان ثبت سفارش",
-      key: "createdAt",
-      align: "center",
-      minWidth: 155,
-    },
-    { title: "وضعیت", key: "status", align: "center" },
-    { title: "عملیات", key: "actions", align: "center", sortable: false },
-  ],
-  page: 1,
-  itemsPerPage: 10,
-});
 const postedOrder = reactive({
   headers: [
     { title: "", key: "row", sortable: false },
@@ -84,30 +41,6 @@ const postedOrder = reactive({
   itemsPerPage: 10,
 });
 
-const filteredItems = computed(() => {
-  return orders.value?.filter((x) =>
-    [x.fullName, x.phone].some((y) => y.indexOf(search.value.trim()) > -1)
-  );
-});
-
-const {
-  data: pendingOrders,
-  refetch: refetch_pendingOrders,
-  isPending: isLoading_pendingOrders,
-} = useQuery({
-  queryKey: ["pendingOrders"],
-  queryFn: () => axios.get("orders", { params: { status: "pending" } }),
-});
-
-const {
-  data: acceptedOrders,
-  refetch: refetch_acceptedOrders,
-  isPending: isLoading_acceptedOrders,
-} = useQuery({
-  queryKey: ["acceptedOrders"],
-  queryFn: () => axios.get("orders", { params: { status: "preparation" } }),
-});
-
 const {
   data: postedOrders,
   refetch: refetch_postedOrders,
@@ -120,7 +53,7 @@ const {
 const { mutate: acceptOrder, isPending: isLoading_acceptOrder } = useMutation({
   mutationFn: (id) => axios.patch(`orders/accept/${id}`),
   onSuccess: () => {
-    refetch_orders();
+    refetch_postedOrders();
   },
   onError: (error) => {
     console.log(error);
@@ -133,7 +66,7 @@ const { mutate: acceptOrder, isPending: isLoading_acceptOrder } = useMutation({
 const { mutate: rejectOrder, isPending: isLoading_rejectOrder } = useMutation({
   mutationFn: (id) => axios.patch(`orders/reject/${id}`),
   onSuccess: () => {
-    refetch_orders();
+    refetch_postedOrders();
   },
   onError: (error) => {
     console.log(error);
@@ -147,7 +80,7 @@ const { mutate: deliverOrder, isPending: isLoading_deliverOrder } = useMutation(
   {
     mutationFn: (id, body) => axios.patch(`orders/deliver/${id}`, body),
     onSuccess: () => {
-      refetch_orders();
+      refetch_postedOrders();
       // sendSMS(item);
     },
     onError: (error) => {
@@ -195,8 +128,6 @@ const dialog = reactive({
     this.canBeShown = false;
   },
 });
-
-const search = ref("");
 
 async function postHandler(item) {
   const { isConfirmed } = await areYouSure();
@@ -260,7 +191,7 @@ const {
 } = useMutation({
   mutationFn: (body) => axios.post("editOrderItem", body),
   onSuccess: async () => {
-    await refetch_orders();
+    await refetch_postedOrders();
     orderItemDialog.close();
     // dialog.close();
     // await nextTick();
@@ -409,185 +340,6 @@ function print(item) {
 </script>
 
 <template>
-  <!-- <v-text-field class="mb-2" placeholder="جستجو" v-model="search" /> -->
-
-  <v-data-table
-    :headers="pendingOrder.headers"
-    :items="pendingOrders"
-    :page="pendingOrder.page"
-    :items-per-page="pendingOrder.itemsPerPage"
-    :page-text="`صفحه ${toPersianDigit(pendingOrder.page)} از ${toPersianDigit(
-      Math.ceil(pendingOrders?.length / pendingOrder.itemsPerPage)
-    )}`"
-    :loading="isLoading_pendingOrders"
-    :hide-default-footer="!pendingOrders?.length || isLoading_pendingOrders"
-  >
-    <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template>
-
-    <template #item.phone="{ item }">
-      {{ toPersianDigit(item.phone) }}
-    </template>
-
-    <template #item.payablePrice="{ item }">
-      {{ numberWithCommas(toPersianDigit(item.payablePrice)) }}
-    </template>
-
-    <template #item.lastFourDigits="{ item }">
-      {{ toPersianDigit(item.lastFourDigits) }}
-    </template>
-
-    <template #item.datetime="{ item: { month, day, hour, minute } }">
-      <div style="direction: ltr">
-        {{ toPersianDigit([month, "/", day, " ", hour, ":", minute].join("")) }}
-      </div>
-    </template>
-
-    <template #item.createdAt="{ item }">
-      {{
-        new Date(item.createdAt).toLocaleString("fa-IR", {
-          dateStyle: "medium",
-          timeStyle: "short",
-        })
-      }}
-    </template>
-
-    <template #item.status="{ item }">
-      <v-chip
-        class="width-80 text-center"
-        label
-        size="small"
-        :color="statusColors[item.status]"
-      >
-        <div class="width-60 text-center">
-          {{ statusTitles[item.status] }}
-        </div>
-      </v-chip>
-    </template>
-
-    <template #item.actions="{ item }">
-      <div class="d-flex justify-center align-center">
-        <v-btn
-          class="ml-5"
-          color="primary"
-          text="جزئیات"
-          @click="dialog.open(item)"
-        />
-
-        <div class="width-270 mx-2">
-          <v-text-field
-            class="height-30"
-            density="compact"
-            variant="outlined"
-            v-model="item.deliveryCode"
-          ></v-text-field>
-        </div>
-
-        <v-btn
-          color="amber"
-          text="پست"
-          :loading="isLoading_deliverOrder && deliveringItemId == item.id"
-          @click="postHandler(item)"
-        />
-
-        <v-btn
-          class="mr-5"
-          color="secondary"
-          text="پرینت"
-          @click="print(item)"
-        />
-      </div>
-    </template>
-  </v-data-table>
-
-  <v-data-table
-    class="mt-4"
-    :headers="acceptedOrder.headers"
-    :items="acceptedOrders"
-    :page="acceptedOrder.page"
-    :items-per-page="acceptedOrder.itemsPerPage"
-    :page-text="`صفحه ${toPersianDigit(acceptedOrder.page)} از ${toPersianDigit(
-      Math.ceil(acceptedOrders?.length / acceptedOrder.itemsPerPage)
-    )}`"
-    :loading="isLoading_acceptedOrders"
-    :hide-default-footer="!acceptedOrders?.length || isLoading_acceptedOrders"
-  >
-    <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template>
-
-    <template #item.phone="{ item }">
-      {{ toPersianDigit(item.phone) }}
-    </template>
-
-    <template #item.payablePrice="{ item }">
-      {{ numberWithCommas(toPersianDigit(item.payablePrice)) }}
-    </template>
-
-    <template #item.lastFourDigits="{ item }">
-      {{ toPersianDigit(item.lastFourDigits) }}
-    </template>
-
-    <template #item.datetime="{ item: { month, day, hour, minute } }">
-      <div style="direction: ltr">
-        {{ toPersianDigit([month, "/", day, " ", hour, ":", minute].join("")) }}
-      </div>
-    </template>
-
-    <template #item.createdAt="{ item }">
-      {{
-        new Date(item.createdAt).toLocaleString("fa-IR", {
-          dateStyle: "medium",
-          timeStyle: "short",
-        })
-      }}
-    </template>
-
-    <template #item.status="{ item }">
-      <v-chip
-        class="width-80 text-center"
-        label
-        size="small"
-        :color="statusColors[item.status]"
-      >
-        <div class="width-60 text-center">
-          {{ statusTitles[item.status] }}
-        </div>
-      </v-chip>
-    </template>
-
-    <template #item.actions="{ item }">
-      <div class="d-flex justify-center align-center">
-        <v-btn
-          class="ml-5"
-          color="primary"
-          text="جزئیات"
-          @click="dialog.open(item)"
-        />
-
-        <div class="width-270 mx-2">
-          <v-text-field
-            class="height-30"
-            density="compact"
-            variant="outlined"
-            v-model="item.deliveryCode"
-          ></v-text-field>
-        </div>
-
-        <v-btn
-          color="amber"
-          text="پست"
-          :loading="isLoading_deliverOrder && deliveringItemId == item.id"
-          @click="postHandler(item)"
-        />
-
-        <v-btn
-          class="mr-5"
-          color="secondary"
-          text="پرینت"
-          @click="print(item)"
-        />
-      </div>
-    </template>
-  </v-data-table>
-
   <v-data-table
     class="mt-4"
     :headers="postedOrder.headers"
