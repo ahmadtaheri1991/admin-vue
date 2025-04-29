@@ -37,8 +37,8 @@ const imageEditEditor = {
 };
 
 const compressionSettings = reactive({
-  maxSizeMB: 1,
-  maxWidthOrHeight: 1920,
+  maxSizeMB: 0.3,
+  maxWidthOrHeight: 500,
   initialQuality: 1,
   showDialog: false,
 });
@@ -385,7 +385,7 @@ const dialog = reactive({
     this.canBeShown = false;
   },
   add() {
-    if (!this.form.coverImage || !this.form.images.length) return;
+    if (!this.form.coverImage) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
     formData.append("categoryId", this.form.category);
@@ -716,12 +716,6 @@ function addProductModelHandler(item) {
             <v-col cols="12">
               <file-pond
                 class="grid"
-                :class="{
-                  error:
-                    !dialog.form.images.length &&
-                    !files.length &&
-                    isImagesTouched,
-                }"
                 ref="pond"
                 :credits="false"
                 :accepted-file-types="acceptedFileTypes"
@@ -732,15 +726,6 @@ function addProductModelHandler(item) {
                 @addfile="handleFilePondAddFile"
                 @removefile="handleFilePondRemoveFile"
               />
-              <div
-                v-if="
-                  !dialog.form.images.length && !files.length && isImagesTouched
-                "
-                class="fs-12 px-4 text-error"
-                style="padding-top: 6px"
-              >
-                الزامی
-              </div>
             </v-col>
 
             <v-col cols="12">
@@ -802,7 +787,7 @@ function addProductModelHandler(item) {
                 <v-slider
                   v-model="compressionSettings.maxSizeMB"
                   :min="0.1"
-                  :max="3"
+                  :max="1"
                   :step="0.1"
                   thumb-label
                   density="compact"

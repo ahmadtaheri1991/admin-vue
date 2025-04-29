@@ -66,8 +66,8 @@ const files = ref([]);
 const acceptedFileTypes = ["image/jpeg", "image/png"];
 
 const compressionSettings = reactive({
-  maxSizeMB: 1,
-  maxWidthOrHeight: 1920,
+  maxSizeMB: 0.3,
+  maxWidthOrHeight: 500,
   initialQuality: 1,
   showDialog: false,
 });
@@ -324,7 +324,7 @@ const productSection = reactive({
     }
   },
   add() {
-    if (!this.form.coverImage || !this.form.images.length) return;
+    if (!this.form.coverImage) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
     formData.append("categoryId", selectedCat.value.id);
@@ -646,12 +646,6 @@ const images = reactive({
             <v-col cols="12" sm="6" md="4">
               <file-pond
                 class="grid"
-                :class="{
-                  error:
-                    !productSection.form.images.length &&
-                    !images.files.length &&
-                    images.isTouched,
-                }"
                 ref="imagesPond"
                 :credits="false"
                 :accepted-file-types="acceptedFileTypes"
@@ -666,17 +660,6 @@ const images = reactive({
                   (err, file) => images.handleFilePondRemoveFile(err, file)
                 "
               />
-              <div
-                v-if="
-                  !productSection.form.images.length &&
-                  !images.files.length &&
-                  images.isTouched
-                "
-                class="fs-12 px-4 text-error"
-                style="padding-top: 6px"
-              >
-                الزامی
-              </div>
             </v-col>
 
             <v-col cols="12">
@@ -833,7 +816,7 @@ const images = reactive({
                 <v-slider
                   v-model="compressionSettings.maxSizeMB"
                   :min="0.1"
-                  :max="3"
+                  :max="1"
                   :step="0.1"
                   thumb-label
                   density="compact"
