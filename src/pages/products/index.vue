@@ -529,9 +529,10 @@ function addProductModelHandler(item) {
       <template #item.actions="{ item }">
         <div class="d-flex justify-center align-center">
           <v-btn
-            class="mx-1"
-            text="افزودن بسته‌بندی محصول"
-            color="primary"
+            class="rounded-circle fs-14"
+            size="x-small"
+            variant="text"
+            icon="mdi-package-variant-closed-plus"
             @click="addProductModelHandler(item)"
           />
 
