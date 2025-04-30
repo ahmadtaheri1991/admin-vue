@@ -28,11 +28,12 @@ const category = reactive({
 });
 
 const selectedCat = ref(null);
+const selectedProduct = ref(null);
 
 const product = reactive({
   headers: [
-    // { title: "", key: "row", sortable: false },
-    // { title: "نام", key: "name" },
+    { title: "", key: "row", sortable: false },
+    { title: "نام", key: "name" },
     { title: "دسته‌بندی", key: "category" },
     { title: "بسته‌بندی", key: "weight" },
     { title: "قیمت", key: "price", align: "center" },
@@ -144,6 +145,12 @@ const {
   enabled: false,
 });
 
+const { data: weights } = useQuery({
+  queryKey: ["weights"],
+  queryFn: () => axios.get("weights"),
+  select: (items) => items.map((x) => ({ value: x.id, title: x.name })),
+});
+
 const { mutate: createCategory, isPending: isLoading_createCategory } =
   useMutation({
     mutationFn: (body) => axios.post("categories", body),
@@ -241,7 +248,55 @@ const { mutate: deleteProduct, isPending: isLoading_deleteProduct } =
     },
   });
 
+const { mutate: createProductModel, isPending: isLoading_createProductModel } =
+  useMutation({
+    mutationFn: (body) => axios.post("productModels", body),
+    onSuccess: () => {
+      appStore.openAlert(0, "با موفقیت افزوده شد");
+      productModelDialog.close();
+      refetch_products();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
+const { mutate: updateProductModel, isPending: isLoading_updateProductModel } =
+  useMutation({
+    mutationFn: ({ id, body }) => axios.patch(`productModels/${id}`, body),
+    onSuccess: () => {
+      appStore.openAlert(0, "با موفقیت ویرایش شد");
+      productModelDialog.close();
+      refetch_products();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
+const { mutate: deleteProductModel, isPending: isLoading_deleteProductModel } =
+  useMutation({
+    mutationFn: (id) => axios.delete(`productModels/${id}`),
+    onSuccess: () => {
+      appStore.openAlert(0, "حذف با موفقیت انجام شد");
+      refetch_products();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
+
 const deletingItemId = ref(0);
+const deletingProductModelId = ref(0);
 
 const isImageTouched = ref(false);
 const dialog = reactive({
@@ -406,6 +461,14 @@ async function deleteProductItem(item) {
   deleteProduct(item.id);
 }
 
+async function deleteProductModelItem(item) {
+  const { isConfirmed } = await areYouSure();
+  if (!isConfirmed) return;
+
+  deletingProductModelId.value = item.id;
+  deleteProductModel(item.id);
+}
+
 function addProductHandler(item) {
   selectedCat.value = item;
   refetch_products();
@@ -550,6 +613,59 @@ const images = reactive({
     this.isTouched = true;
   },
 });
+
+const productModelDialog = reactive({
+  canBeShown: false,
+  item: null,
+  formRef: null,
+  form: {
+    weightId: null,
+    price: "",
+    inventory: "",
+  },
+  async open(item) {
+    this.canBeShown = true;
+    this.item = null;
+    await nextTick();
+    this.formRef?.reset();
+    if (item) {
+      this.item = item;
+      this.form.weightId = item.weightId;
+      this.form.price = item.price;
+      this.form.inventory = item.inventory;
+    }
+  },
+  close() {
+    this.canBeShown = false;
+    this.item = null;
+  },
+  add() {
+    const body = {
+      categoryId: selectedCat.value.id,
+      productId: selectedProduct.value.id,
+      ...this.form,
+      // weightId: this.form.weight,
+      // price: this.form.price,
+      // inventory: this.form.inventory,
+    };
+    createProductModel(body);
+  },
+  update() {
+    const body = {
+      categoryId: selectedCat.value.id,
+      productId: selectedProduct.value.id,
+      ...this.form,
+      // weightId: this.form.weight,
+      // price: this.form.price,
+      // inventory: this.form.inventory,
+    };
+    updateProductModel({ id: this.item.id, body });
+  },
+  clear() {
+    this.item = null;
+    this.formRef?.reset();
+  },
+});
 </script>
 
 <template>
@@ -577,10 +693,10 @@ const images = reactive({
       <template #item.actions="{ item }">
         <div class="d-flex justify-center align-center">
           <v-btn
-            size="small"
-            class="mx-1"
-            text="افزودن محصول"
-            color="primary"
+            class="rounded-circle fs-14"
+            size="x-small"
+            variant="text"
+            icon="mdi-cube-outline"
             @click="addProductHandler(item)"
           />
 
@@ -712,8 +828,6 @@ const images = reactive({
     </v-card>
 
     <v-data-table
-      :group-by="[{ key: 'name', order: 'asc' }]"
-      item-value="productModels"
       :headers="product.headers"
       :items="categoryProducts"
       :page="product.page"
@@ -723,86 +837,76 @@ const images = reactive({
       )}`"
       :loading="isLoading_products"
       :hide-default-footer="!categoryProducts?.length || isLoading_products"
+      show-expand
     >
-      <template
-        #group-header="{ item, index, columns, toggleGroup, isGroupOpen }"
-      >
-        <tr
-          style="padding-bottom: 1px !important"
-          :style="{
-            backgroundColor: item.items.some((x) => x.raw.inventory < 10)
-              ? '#ffcdd2'
-              : index % 2 == 0
-              ? '#f4f4f5'
-              : '',
-          }"
-        >
-          <td>
-            <div class="d-flex align-center">
-              <v-btn
-                :icon="isGroupOpen(item) ? '$expand' : '$prev'"
-                size="small"
-                rounded="circle"
-                variant="text"
-                @click="toggleGroup(item)"
-              />
-              <span style="white-space: nowrap">{{ item.value }}</span>
-            </div>
-          </td>
+      <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template>
 
-          <td :colspan="columns.length - 1" />
-        </tr>
-        <div style="height: 1px" />
+      <template #item.category="{ item }">
+        {{ item.category.name }}
       </template>
 
-      <template #header.data-table-group> محصول </template>
+      <template
+        #item.data-table-expand="{
+          item: { productModels },
+          internalItem,
+          isExpanded,
+          toggleExpand,
+        }"
+      >
+        <v-btn
+          class="fs-14"
+          rounded="circle"
+          variant="text"
+          size="x-small"
+          v-if="productModels.length > 0"
+          @click="toggleExpand(internalItem)"
+          :icon="
+            isExpanded(internalItem) ? 'mdi-chevron-up' : 'mdi-chevron-down'
+          "
+        />
+      </template>
 
-      <!-- <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template> -->
+      <template #expanded-row="{ item: { productModels } }">
+        <tr v-for="item in productModels" :key="item.id">
+          <td colspan="3"></td>
+          <td>{{ item.weight.name }}</td>
+          <td class="text-center">{{ item.price }}</td>
+          <td class="text-center">{{ item.inventory }}</td>
+          <td class="text-center">
+            <v-edit-btn @click="productModelDialog.open(item)" />
 
-      <!-- <template #item.category="{ item }">
-        {{ item.category.name }}
-      </template> -->
-
-      <template #item="{ item, index }">
-        {{ item }}
-        <tr
-          :style="{
-            backgroundColor:
-              item.inventory < 10 ? '#ffcdd2' : index % 2 == 0 ? '#f4f4f5' : '',
-          }"
-        >
+            <v-delete-btn
+              :loading="
+                isLoading_deleteProductModel &&
+                deletingProductModelId == item.id
+              "
+              @click="deleteProductModelItem(item)"
+            />
+          </td>
           <td></td>
-          <td>{{ item.category.name }}</td>
-          <td>{{ item.productModels[0].weight.name }}</td>
-          <td class="text-center">
-            {{ toPersianNumber(numberWithCommas(item.productModels[0].price)) }}
-          </td>
-          <td class="text-center">
-            {{ toPersianNumber(item.productModels[0].inventory) }}
-          </td>
-          <td>
-            <div class="d-flex justify-center">
-              <v-edit-btn @click="dialog.open(item)" />
-
-              <v-delete-btn
-                :loading="
-                  isLoading_deleteProductModel && deletingItemId == item.id
-                "
-                @click="deleteItem(item)"
-              />
-            </div>
-          </td>
         </tr>
-        <div style="height: 1px" />
       </template>
 
       <template #item.actions="{ item }">
-        <div class="d-flex justify-center">
+        <div class="d-flex justify-center align-center">
           <v-edit-btn @click="productSection.open(item)" />
 
           <v-delete-btn
             :loading="isLoading_deleteProduct && deletingItemId == item.id"
             @click="deleteProductItem(item)"
+          />
+
+          <v-btn
+            class="mx-1 rounded-circle fs-14"
+            size="x-small"
+            variant="text"
+            icon="mdi-package-variant-closed-plus"
+            @click="
+              () => {
+                selectedProduct = item;
+                productModelDialog.open();
+              }
+            "
           />
         </div>
       </template>
@@ -865,6 +969,72 @@ const images = reactive({
             :text="dialog.item ? 'ویرایش' : 'افزودن'"
             :loading="isLoading_createCategory || isLoading_updateCategory"
             @click="if (!dialog.item) isImageTouched = true;"
+          />
+        </div>
+      </custom-form>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog max-width="400" v-model="productModelDialog.canBeShown">
+    <v-card>
+      <custom-form
+        v-model="productModelDialog.formRef"
+        @valid="
+          productModelDialog.item
+            ? productModelDialog.update()
+            : productModelDialog.add()
+        "
+      >
+        <v-card-title>{{
+          productModelDialog.item ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی"
+        }}</v-card-title>
+
+        <v-card-text>
+          <v-row>
+            <v-col cols="12">
+              <v-select
+                v-model="productModelDialog.form.weightId"
+                :items="weights"
+                label="بسته‌بندی"
+                :rules="[required]"
+              />
+            </v-col>
+
+            <v-col cols="12">
+              <v-text-field
+                dir="auto"
+                v-model="productModelDialog.form.price"
+                label="قیمت"
+                :rules="[required]"
+              />
+            </v-col>
+
+            <v-col cols="12">
+              <v-text-field
+                dir="auto"
+                v-model="productModelDialog.form.inventory"
+                label="موجودی"
+                :rules="[required]"
+              />
+            </v-col>
+          </v-row>
+        </v-card-text>
+
+        <div
+          style="height: 72px"
+          class="d-flex px-6 py-4 flex-wrap align-center"
+        >
+          <v-spacer />
+
+          <v-cancel-btn @click="productModelDialog.close()" />
+
+          <v-submit-btn
+            type="submit"
+            :text="productModelDialog.item ? 'ویرایش' : 'افزودن'"
+            :loading="
+              isLoading_createProductModel || isLoading_updateProductModel
+            "
+            @click="if (!productModelDialog.item) isImageTouched = true;"
           />
         </div>
       </custom-form>
