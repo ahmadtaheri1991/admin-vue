@@ -1,6 +1,11 @@
 <script setup>
 import axios from "@/axios";
-import { areYouSure, toPersianDigit } from "@/utils/functions";
+import {
+  areYouSure,
+  toPersianDigit,
+  numberWithCommas,
+  toPersianNumber,
+} from "@/utils/functions";
 import { required } from "@/utils/formRules";
 import vueFilePond from "vue-filepond";
 import "filepond/dist/filepond.min.css";
@@ -22,11 +27,16 @@ const category = reactive({
   itemsPerPage: 10,
 });
 
+const selectedCat = ref(null);
+
 const product = reactive({
   headers: [
-    { title: "", key: "row", sortable: false },
-    { title: "نام", key: "name" },
+    // { title: "", key: "row", sortable: false },
+    // { title: "نام", key: "name" },
     { title: "دسته‌بندی", key: "category" },
+    { title: "بسته‌بندی", key: "weight" },
+    { title: "قیمت", key: "price", align: "center" },
+    { title: "موجودی", key: "inventory", align: "center" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
   ],
   page: 1,
@@ -126,8 +136,12 @@ const {
   refetch: refetch_products,
   isPending: isLoading_products,
 } = useQuery({
-  queryKey: ["products"],
-  queryFn: () => axios.get("products"),
+  queryKey: ["products", selectedCat.value?.id],
+  queryFn: () =>
+    axios.get(
+      `products?categoryId=${selectedCat.value.id}&withProductModels=true`
+    ),
+  enabled: false,
 });
 
 const { mutate: createCategory, isPending: isLoading_createCategory } =
@@ -372,7 +386,6 @@ const productSection = reactive({
   },
 });
 
-const selectedCat = ref(null);
 const categoryProducts = computed(() =>
   products.value?.filter((x) => x.categoryId == selectedCat.value.id)
 );
@@ -395,6 +408,7 @@ async function deleteProductItem(item) {
 
 function addProductHandler(item) {
   selectedCat.value = item;
+  refetch_products();
   showProduct.value = true;
   images.isTouched = false;
   images.files = [];
@@ -698,6 +712,8 @@ const images = reactive({
     </v-card>
 
     <v-data-table
+      :group-by="[{ key: 'name', order: 'asc' }]"
+      item-value="productModels"
       :headers="product.headers"
       :items="categoryProducts"
       :page="product.page"
@@ -707,12 +723,77 @@ const images = reactive({
       )}`"
       :loading="isLoading_products"
       :hide-default-footer="!categoryProducts?.length || isLoading_products"
-      ><template #item.row="{ index }">{{
-        toPersianDigit(index + 1)
-      }}</template>
+    >
+      <template
+        #group-header="{ item, index, columns, toggleGroup, isGroupOpen }"
+      >
+        <tr
+          style="padding-bottom: 1px !important"
+          :style="{
+            backgroundColor: item.items.some((x) => x.raw.inventory < 10)
+              ? '#ffcdd2'
+              : index % 2 == 0
+              ? '#f4f4f5'
+              : '',
+          }"
+        >
+          <td>
+            <div class="d-flex align-center">
+              <v-btn
+                :icon="isGroupOpen(item) ? '$expand' : '$prev'"
+                size="small"
+                rounded="circle"
+                variant="text"
+                @click="toggleGroup(item)"
+              />
+              <span style="white-space: nowrap">{{ item.value }}</span>
+            </div>
+          </td>
 
-      <template #item.category="{ item }">
+          <td :colspan="columns.length - 1" />
+        </tr>
+        <div style="height: 1px" />
+      </template>
+
+      <template #header.data-table-group> محصول </template>
+
+      <!-- <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template> -->
+
+      <!-- <template #item.category="{ item }">
         {{ item.category.name }}
+      </template> -->
+
+      <template #item="{ item, index }">
+        {{ item }}
+        <tr
+          :style="{
+            backgroundColor:
+              item.inventory < 10 ? '#ffcdd2' : index % 2 == 0 ? '#f4f4f5' : '',
+          }"
+        >
+          <td></td>
+          <td>{{ item.category.name }}</td>
+          <td>{{ item.productModels[0].weight.name }}</td>
+          <td class="text-center">
+            {{ toPersianNumber(numberWithCommas(item.productModels[0].price)) }}
+          </td>
+          <td class="text-center">
+            {{ toPersianNumber(item.productModels[0].inventory) }}
+          </td>
+          <td>
+            <div class="d-flex justify-center">
+              <v-edit-btn @click="dialog.open(item)" />
+
+              <v-delete-btn
+                :loading="
+                  isLoading_deleteProductModel && deletingItemId == item.id
+                "
+                @click="deleteItem(item)"
+              />
+            </div>
+          </td>
+        </tr>
+        <div style="height: 1px" />
       </template>
 
       <template #item.actions="{ item }">
