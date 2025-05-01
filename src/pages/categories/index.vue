@@ -406,7 +406,7 @@ const productSection = reactive({
     createProduct(formData);
   },
   update() {
-    if (!this.form.coverImage && coverImage.isTouched) return;
+    if (!this.form.coverImage) return;
     if (!this.form.images.length && !images.files.length) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
