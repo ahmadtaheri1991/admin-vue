@@ -8,6 +8,7 @@ import {
 } from "@/utils/functions";
 import axios from "@/axios";
 import { required } from "@/utils/formRules";
+import NumberField from "@/components/NumberField.vue";
 
 const productModel = reactive({
   headers: [
@@ -17,6 +18,7 @@ const productModel = reactive({
     { title: "بسته‌بندی", key: "weight" },
     { title: "قیمت", key: "price", align: "center" },
     { title: "موجودی", key: "inventory", align: "center" },
+    { title: "ترتیب نمایش", key: "sortOrder", align: "center" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
   ],
   page: 1,
@@ -111,6 +113,7 @@ const dialog = reactive({
     weight: null,
     price: "",
     inventory: "",
+    sortOrder: "",
   },
   async open(item) {
     this.canBeShown = true;
@@ -124,6 +127,7 @@ const dialog = reactive({
       this.form.weight = item.weightId;
       this.form.price = item.price;
       this.form.inventory = item.inventory;
+      this.form.sortOrder = item.sortOrder;
     }
   },
   close() {
@@ -136,6 +140,7 @@ const dialog = reactive({
       weightId: this.form.weight,
       price: this.form.price,
       inventory: this.form.inventory,
+      sortOrder: this.form.sortOrder,
     };
     createProductModel(body);
   },
@@ -146,6 +151,7 @@ const dialog = reactive({
       weightId: this.form.weight,
       price: numberWithoutCommas(toEnglishNumber(this.form.price)),
       inventory: numberWithoutCommas(toEnglishNumber(this.form.inventory)),
+      sortOrder: this.form.sortOrder,
     };
     updateProductModel({ id: this.item.id, body });
   },
@@ -257,6 +263,7 @@ const filteredProducts = computed(() => {
           {{ toPersianNumber(numberWithCommas(item.price)) }}
         </td>
         <td class="text-center">{{ toPersianNumber(item.inventory) }}</td>
+        <td class="text-center">{{ toPersianNumber(item.sortOrder || "") }}</td>
         <td>
           <div class="d-flex justify-center">
             <v-edit-btn @click="dialog.open(item)" />
@@ -316,7 +323,7 @@ const filteredProducts = computed(() => {
             </v-col>
 
             <v-col cols="12" sm="6" md="4">
-              <v-text-field
+              <number-field
                 v-model="dialog.form.price"
                 label="قیمت"
                 :rules="[required]"
@@ -324,10 +331,17 @@ const filteredProducts = computed(() => {
             </v-col>
 
             <v-col cols="12" sm="6" md="4">
-              <v-text-field
+              <number-field
                 v-model="dialog.form.inventory"
                 label="موجودی"
                 :rules="[required]"
+              />
+            </v-col>
+
+            <v-col cols="12" sm="6" md="4">
+              <number-field
+                v-model="dialog.form.sortOrder"
+                label="ترتیب نمایش"
               />
             </v-col>
           </v-row>

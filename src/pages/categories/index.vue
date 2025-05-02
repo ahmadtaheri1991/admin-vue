@@ -1,11 +1,6 @@
 <script setup>
 import axios from "@/axios";
-import {
-  areYouSure,
-  toPersianDigit,
-  numberWithCommas,
-  toPersianNumber,
-} from "@/utils/functions";
+import { areYouSure, toPersianDigit } from "@/utils/functions";
 import { required } from "@/utils/formRules";
 import vueFilePond from "vue-filepond";
 import "filepond/dist/filepond.min.css";
@@ -16,11 +11,13 @@ import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
 import "vue-advanced-cropper/dist/style.css";
 import { Cropper } from "vue-advanced-cropper";
 import imageCompression from "browser-image-compression";
+import NumberField from "@/components/NumberField.vue";
 
 const category = reactive({
   headers: [
     { title: "", key: "row", sortable: false },
     { title: "نام", key: "name", minWidth: 110 },
+    { title: "ترتیب نمایش", key: "sortOrder", align: "center" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
   ],
   page: 1,
@@ -38,6 +35,7 @@ const product = reactive({
     { title: "بسته‌بندی", key: "weight" },
     { title: "قیمت", key: "price", align: "center" },
     { title: "موجودی", key: "inventory", align: "center" },
+    { title: "ترتیب نمایش", key: "sortOrder", align: "center" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
   ],
   page: 1,
@@ -305,6 +303,7 @@ const dialog = reactive({
   formRef: null,
   form: {
     name: "",
+    sortOrder: "",
     image: null,
   },
   async open(item) {
@@ -318,6 +317,7 @@ const dialog = reactive({
     if (item) {
       this.item = item;
       this.form.name = item.name;
+      this.form.sortOrder = item.sortOrder;
       files.value = [
         item.imageUrl.startsWith("http")
           ? item.imageUrl
@@ -333,6 +333,7 @@ const dialog = reactive({
     if (!this.form.image) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
+    formData.append("sortOrder", this.form.sortOrder);
     formData.append("image", this.form.image);
     createCategory(formData);
   },
@@ -340,6 +341,7 @@ const dialog = reactive({
     if (!this.form.image && isImageTouched.value) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
+    formData.append("sortOrder", this.form.sortOrder);
     if (this.form.image?.name) formData.append("image", this.form.image);
     updateCategory({ id: this.item.id, body: formData });
   },
@@ -352,6 +354,7 @@ const productSection = reactive({
   formRef: null,
   form: {
     name: "",
+    sortOrder: "",
     category: null,
     coverImage: null,
     images: [],
@@ -372,6 +375,7 @@ const productSection = reactive({
     if (item) {
       this.item = item;
       this.form.name = item.name;
+      this.form.sortOrder = item.sortOrder;
       this.form.category = item.categoryId;
       this.form.description = item.description;
       coverImage.files = [
@@ -396,6 +400,7 @@ const productSection = reactive({
     if (!this.form.coverImage) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
+    formData.append("sortOrder", this.form.sortOrder);
     formData.append("categoryId", selectedCat.value.id);
     formData.append("description", this.form.description);
     formData.append("image", this.form.coverImage);
@@ -409,6 +414,7 @@ const productSection = reactive({
     if (!this.form.coverImage && coverImage.isTouched) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
+    formData.append("sortOrder", this.form.sortOrder);
     formData.append("categoryId", this.form.category);
     formData.append("description", this.form.description);
     if (this.form.images.length) {
@@ -621,6 +627,7 @@ const productModelDialog = reactive({
     weightId: null,
     price: "",
     inventory: "",
+    sortOrder: "",
   },
   async open(item) {
     this.canBeShown = true;
@@ -632,6 +639,7 @@ const productModelDialog = reactive({
       this.form.weightId = item.weightId;
       this.form.price = item.price;
       this.form.inventory = item.inventory;
+      this.form.sortOrder = item.sortOrder;
     }
   },
   close() {
@@ -652,7 +660,7 @@ const productModelDialog = reactive({
   update() {
     const body = {
       categoryId: selectedCat.value.id,
-      productId: selectedProduct.value.id,
+      productId: this.item.productId,
       ...this.form,
       // weightId: this.form.weight,
       // price: this.form.price,
@@ -688,6 +696,10 @@ const productModelDialog = reactive({
       :hide-default-footer="!categories?.length || isLoading_categories"
     >
       <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template>
+
+      <template #item.sortOrder="{ item }">{{
+        toPersianDigit(item.sortOrder)
+      }}</template>
 
       <template #item.actions="{ item }">
         <div class="d-flex justify-center align-center">
@@ -738,6 +750,13 @@ const productModelDialog = reactive({
                 v-model="productSection.form.name"
                 label="نام محصول"
                 :rules="[required]"
+              />
+            </v-col>
+
+            <v-col cols="12" sm="6" md="4">
+              <number-field
+                v-model="productSection.form.sortOrder"
+                label="ترتیب نمایش"
               />
             </v-col>
 
@@ -840,6 +859,10 @@ const productModelDialog = reactive({
     >
       <template #item.row="{ index }">{{ toPersianDigit(index + 1) }}</template>
 
+      <template #item.sortOrder="{ item }">{{
+        toPersianDigit(item.sortOrder)
+      }}</template>
+
       <template #item.category="{ item }">
         {{ item.category.name }}
       </template>
@@ -869,8 +892,9 @@ const productModelDialog = reactive({
         <tr v-for="item in productModels" :key="item.id">
           <td colspan="3"></td>
           <td>{{ item.weight.name }}</td>
-          <td class="text-center">{{ item.price }}</td>
-          <td class="text-center">{{ item.inventory }}</td>
+          <td class="text-center">{{ toPersianDigit(item.price) }}</td>
+          <td class="text-center">{{ toPersianDigit(item.inventory) }}</td>
+          <td class="text-center">{{ toPersianDigit(item.sortOrder) }}</td>
           <td class="text-center">
             <v-edit-btn @click="productModelDialog.open(item)" />
 
@@ -929,6 +953,13 @@ const productModelDialog = reactive({
                 v-model="dialog.form.name"
                 label="نام دسته‌بندی"
                 :rules="[required]"
+              />
+            </v-col>
+
+            <v-col cols="12">
+              <number-field
+                v-model="dialog.form.sortOrder"
+                label="ترتیب نمایش"
               />
             </v-col>
 
@@ -1000,8 +1031,7 @@ const productModelDialog = reactive({
             </v-col>
 
             <v-col cols="12">
-              <v-text-field
-                dir="auto"
+              <number-field
                 v-model="productModelDialog.form.price"
                 label="قیمت"
                 :rules="[required]"
@@ -1009,11 +1039,17 @@ const productModelDialog = reactive({
             </v-col>
 
             <v-col cols="12">
-              <v-text-field
-                dir="auto"
+              <number-field
                 v-model="productModelDialog.form.inventory"
                 label="موجودی"
                 :rules="[required]"
+              />
+            </v-col>
+
+            <v-col cols="12">
+              <number-field
+                v-model="productModelDialog.form.sortOrder"
+                label="ترتیب نمایش"
               />
             </v-col>
           </v-row>
