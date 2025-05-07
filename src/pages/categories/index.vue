@@ -16,6 +16,7 @@ import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
 import "vue-advanced-cropper/dist/style.css";
 import { Cropper } from "vue-advanced-cropper";
 import imageCompression from "browser-image-compression";
+import Tiptap from "@/components/Tiptap.vue";
 
 const category = reactive({
   headers: [
@@ -793,13 +794,15 @@ const productModelDialog = reactive({
             </v-col>
 
             <v-col cols="12">
-              <v-textarea
+              <!-- <v-textarea
                 v-model="productSection.form.description"
                 label="توضیحات"
                 variant="outlined"
                 rows="2"
                 :rules="[required]"
-              />
+              /> -->
+
+              <tiptap v-model="productSection.form.description" />
             </v-col>
           </v-row>
         </v-card-text>
