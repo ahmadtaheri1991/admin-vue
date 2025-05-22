@@ -12,6 +12,7 @@ import "vue-advanced-cropper/dist/style.css";
 import { Cropper } from "vue-advanced-cropper";
 import imageCompression from "browser-image-compression";
 import { nextTick } from "vue";
+import NumberField from "@/components/NumberField.vue";
 
 // Create FilePond component
 const FilePond = vueFilePond(
@@ -185,6 +186,7 @@ const product = reactive({
     { title: "", key: "row", sortable: false },
     { title: "نام", key: "name" },
     { title: "دسته‌بندی", key: "category" },
+    { title: "ترتیب نمایش", key: "sortOrder", align: "center" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
   ],
   page: 1,
@@ -199,6 +201,7 @@ const productModel = reactive({
     { title: "بسته‌بندی", key: "weight" },
     { title: "قیمت", key: "price", align: "center" },
     { title: "موجودی", key: "inventory", align: "center" },
+    { title: "ترتیب نمایش", key: "sortOrder", align: "center" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
   ],
   page: 1,
@@ -342,6 +345,7 @@ const dialog = reactive({
   form: {
     name: "",
     category: null,
+    sortOrder: "",
     coverImage: null,
     images: [],
     description: "",
@@ -361,6 +365,7 @@ const dialog = reactive({
     if (item) {
       this.item = item;
       this.form.name = item.name;
+      this.form.sortOrder = item.sortOrder;
       this.form.category = item.categoryId;
       this.form.description = item.description;
       coverImage.files = [
@@ -388,6 +393,7 @@ const dialog = reactive({
     if (!this.form.coverImage) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
+    formData.append("sortOrder", this.form.sortOrder);
     formData.append("categoryId", this.form.category);
     formData.append("description", this.form.description);
     formData.append("image", this.form.coverImage);
@@ -399,9 +405,9 @@ const dialog = reactive({
   },
   update() {
     if (!this.form.coverImage && coverImage.isTouched) return;
-    if (!this.form.images.length && !files.value.length) return;
     const formData = new FormData();
     formData.append("name", this.form.name);
+    formData.append("sortOrder", this.form.sortOrder);
     formData.append("categoryId", this.form.category);
     formData.append("description", this.form.description);
     if (this.form.images.length) {
@@ -431,6 +437,7 @@ const productModelSection = reactive({
     weight: null,
     price: "",
     inventory: "",
+    sortOrder: "",
   },
   async open(item) {
     this.canBeShown = true;
@@ -444,6 +451,7 @@ const productModelSection = reactive({
       this.form.weight = item.weightId;
       this.form.price = item.price;
       this.form.inventory = item.inventory;
+      this.form.sortOrder = item.sortOrder;
     }
   },
   add() {
@@ -453,6 +461,7 @@ const productModelSection = reactive({
       weightId: this.form.weight,
       price: this.form.price,
       inventory: this.form.inventory,
+      sortOrder: this.form.sortOrder,
     };
     createProductModel(body);
   },
@@ -463,6 +472,7 @@ const productModelSection = reactive({
       weightId: this.form.weight,
       price: this.form.price,
       inventory: this.form.inventory,
+      sortOrder: this.form.sortOrder,
     };
     updateProductModel({ id: this.item.id, body });
   },
@@ -526,6 +536,10 @@ function addProductModelHandler(item) {
         {{ item.category.name }}
       </template>
 
+      <template #item.sortOrder="{ item }">{{
+        toPersianDigit(item.sortOrder)
+      }}</template>
+
       <template #item.actions="{ item }">
         <div class="d-flex justify-center align-center">
           <v-btn
@@ -572,7 +586,7 @@ function addProductModelHandler(item) {
       >
         <v-card-text>
           <v-row>
-            <v-col cols="12" sm="6" md="4">
+            <v-col cols="12" sm="6" md="3">
               <v-select
                 v-model="productModelSection.form.weight"
                 :items="weights"
@@ -581,19 +595,26 @@ function addProductModelHandler(item) {
               />
             </v-col>
 
-            <v-col cols="12" sm="6" md="4">
-              <v-text-field
+            <v-col cols="12" sm="6" md="3">
+              <number-field
                 v-model="productModelSection.form.price"
                 label="قیمت"
                 :rules="[required]"
               />
             </v-col>
 
-            <v-col cols="12" sm="6" md="4">
-              <v-text-field
+            <v-col cols="12" sm="6" md="3">
+              <number-field
                 v-model="productModelSection.form.inventory"
                 label="موجودی"
                 :rules="[required]"
+              />
+            </v-col>
+
+            <v-col cols="12" sm="6" md="3">
+              <number-field
+                v-model="productModelSection.form.sortOrder"
+                label="ترتیب نمایش"
               />
             </v-col>
           </v-row>
@@ -641,6 +662,7 @@ function addProductModelHandler(item) {
           <td>{{ item.weight.name }}</td>
           <td class="text-center">{{ toPersianDigit(item.price) }}</td>
           <td class="text-center">{{ toPersianDigit(item.inventory) }}</td>
+          <td class="text-center">{{ toPersianDigit(item.sortOrder) }}</td>
           <td>
             <div class="d-flex justify-center">
               <v-edit-btn @click="productModelSection.open(item)" />
@@ -688,6 +710,13 @@ function addProductModelHandler(item) {
             </v-col>
 
             <v-col cols="12" sm="6" md="4">
+              <number-field
+                v-model="dialog.form.sortOrder"
+                label="ترتیب نمایش"
+              />
+            </v-col>
+
+            <v-col cols="12" sm="6" md="4">
               <file-pond
                 :class="{
                   error: dialog.form.coverImage == null && coverImage.isTouched,
@@ -714,7 +743,7 @@ function addProductModelHandler(item) {
               </div>
             </v-col>
 
-            <v-col cols="12">
+            <v-col cols="12" sm="8">
               <file-pond
                 class="grid"
                 ref="pond"
