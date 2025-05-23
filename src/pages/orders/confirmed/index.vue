@@ -740,7 +740,9 @@ function print(item) {
         </div>
 
         <v-row dense>
-          <v-col cols="12">فرستنده: {{ printDialog.item.deliveryCode }}</v-col>
+          <v-col cols="6">فرستنده: مزه رسون</v-col>
+          <v-col cols="6">صاپست: ۱۲۳۴۱۵۱</v-col>
+          <v-divider />
           <v-col cols="6">گیرنده: {{ printDialog.item.fullName }}</v-col>
           <v-col cols="6"
             >شماره تماس: {{ toPersianDigit(printDialog.item.phone) }}</v-col
@@ -751,10 +753,10 @@ function print(item) {
           >
           <v-col cols="6">توضیحات: {{ printDialog.item.description }}</v-col>
         </v-row>
-
+        <v-divider />
         <div class="mt-5 mb-3">سفارش‌ها</div>
 
-        <v-row>
+        <v-row dense>
           <v-col
             cols="6"
             v-for="(item, i) in printDialog.item.orderItems"
@@ -763,8 +765,24 @@ function print(item) {
             {{ toPersianDigit(i + 1) }} -
             {{ item.product.name }}
             {{ toPersianDigit(item.weight.name) }}
-            ({{ toPersianDigit(item.count) }} عدد)
+            ({{ toPersianDigit(item.count) }} عدد):
+            {{ toPersianDigit(item.price * item.count) }}
           </v-col>
+        </v-row>
+
+        <v-row dense class="mt-5">
+          <v-col cols="6">هزینه ارسال: ۶۹</v-col>
+          <v-col cols="6"
+            >جمع کل:
+            {{
+              toPersianDigit(
+                printDialog.item.orderItems.reduce(
+                  (sum, cur) => sum + cur.price * cur.count,
+                  0
+                ) + 69
+              )
+            }}</v-col
+          >
         </v-row>
       </v-card-text>
 
