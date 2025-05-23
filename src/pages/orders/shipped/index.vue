@@ -27,12 +27,13 @@ const postedOrder = reactive({
       key: "fullName",
       minWidth: 140,
     },
-    { title: "شماره تماس", key: "phone", minWidth: 111 },
+    { title: "شماره تماس", key: "phone", minWidth: 111, align: "center" },
+    { title: "کد سفارش", key: "trackingCode", minWidth: 101, align: "center" },
     {
       title: "زمان ثبت سفارش",
       key: "createdAt",
       align: "center",
-      minWidth: 155,
+      minWidth: 160,
     },
     { title: "وضعیت", key: "status", align: "center" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
@@ -356,6 +357,10 @@ function print(item) {
 
     <template #item.phone="{ item }">
       {{ toPersianDigit(item.phone) }}
+    </template>
+
+    <template #item.trackingCode="{ item }">
+      {{ toPersianDigit(item.trackingCode) }}
     </template>
 
     <template #item.payablePrice="{ item }">
