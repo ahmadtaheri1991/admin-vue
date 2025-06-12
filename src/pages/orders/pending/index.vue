@@ -361,7 +361,7 @@ function print(item) {
     </template>
 
     <template #item.totalPrice="{ item }">
-      {{ toPersianDigit(item.totalPrice) }}
+      {{ toPersianDigit(item.totalPrice + 99) }}
     </template>
 
     <template #item.createdAt="{ item }">
@@ -509,9 +509,9 @@ function print(item) {
 
           <template #body.append>
             <tr class="font-weight-bold">
-              <td colspan="5">مجموع</td>
+              <td colspan="5">مجموع با هزینه پیک</td>
               <td class="text-center">
-                {{ toPersianDigit(dialog.item.totalPrice) }}
+                {{ toPersianDigit(dialog.item.totalPrice + 99) }}
               </td>
               <td colspan="2"></td>
             </tr>
