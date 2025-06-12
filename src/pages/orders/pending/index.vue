@@ -29,6 +29,7 @@ const pendingOrder = reactive({
     },
     { title: "شماره تماس", key: "phone", minWidth: 111, align: "center" },
     { title: "کد سفارش", key: "trackingCode", minWidth: 101, align: "center" },
+    { title: "مبلغ", key: "totalPrice", align: "center" },
     {
       title: "زمان ثبت سفارش",
       key: "createdAt",
@@ -359,18 +360,8 @@ function print(item) {
       {{ toPersianDigit(item.trackingCode) }}
     </template>
 
-    <template #item.payablePrice="{ item }">
-      {{ numberWithCommas(toPersianDigit(item.payablePrice)) }}
-    </template>
-
-    <template #item.lastFourDigits="{ item }">
-      {{ toPersianDigit(item.lastFourDigits) }}
-    </template>
-
-    <template #item.datetime="{ item: { month, day, hour, minute } }">
-      <div style="direction: ltr">
-        {{ toPersianDigit([month, "/", day, " ", hour, ":", minute].join("")) }}
-      </div>
+    <template #item.totalPrice="{ item }">
+      {{ toPersianDigit(item.totalPrice) }}
     </template>
 
     <template #item.createdAt="{ item }">
