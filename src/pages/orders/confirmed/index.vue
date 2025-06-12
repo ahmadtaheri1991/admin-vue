@@ -27,12 +27,13 @@ const acceptedOrder = reactive({
       key: "fullName",
       minWidth: 140,
     },
-    { title: "شماره تماس", key: "phone", minWidth: 111 },
+    { title: "شماره تماس", key: "phone", minWidth: 111, align: "center" },
+    { title: "کد سفارش", key: "trackingCode", minWidth: 101, align: "center" },
     {
       title: "زمان ثبت سفارش",
       key: "createdAt",
       align: "center",
-      minWidth: 155,
+      minWidth: 160,
     },
     { title: "وضعیت", key: "status", align: "center" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
@@ -356,6 +357,10 @@ function print(item) {
 
     <template #item.phone="{ item }">
       {{ toPersianDigit(item.phone) }}
+    </template>
+
+    <template #item.trackingCode="{ item }">
+      {{ toPersianDigit(item.trackingCode) }}
     </template>
 
     <template #item.payablePrice="{ item }">
@@ -735,7 +740,9 @@ function print(item) {
         </div>
 
         <v-row dense>
-          <v-col cols="12">فرستنده: {{ printDialog.item.deliveryCode }}</v-col>
+          <v-col cols="6">فرستنده: مزه رسون</v-col>
+          <v-col cols="6">صاپست: ۱۲۳۴۱۵۱</v-col>
+          <v-divider />
           <v-col cols="6">گیرنده: {{ printDialog.item.fullName }}</v-col>
           <v-col cols="6"
             >شماره تماس: {{ toPersianDigit(printDialog.item.phone) }}</v-col
@@ -746,10 +753,10 @@ function print(item) {
           >
           <v-col cols="6">توضیحات: {{ printDialog.item.description }}</v-col>
         </v-row>
-
+        <v-divider />
         <div class="mt-5 mb-3">سفارش‌ها</div>
 
-        <v-row>
+        <v-row dense>
           <v-col
             cols="6"
             v-for="(item, i) in printDialog.item.orderItems"
@@ -758,8 +765,24 @@ function print(item) {
             {{ toPersianDigit(i + 1) }} -
             {{ item.product.name }}
             {{ toPersianDigit(item.weight.name) }}
-            ({{ toPersianDigit(item.count) }} عدد)
+            ({{ toPersianDigit(item.count) }} عدد):
+            {{ toPersianDigit(item.price * item.count) }}
           </v-col>
+        </v-row>
+
+        <v-row dense class="mt-5">
+          <v-col cols="6">هزینه ارسال: ۶۹</v-col>
+          <v-col cols="6"
+            >جمع کل:
+            {{
+              toPersianDigit(
+                printDialog.item.orderItems.reduce(
+                  (sum, cur) => sum + cur.price * cur.count,
+                  0
+                ) + 69
+              )
+            }}</v-col
+          >
         </v-row>
       </v-card-text>
 

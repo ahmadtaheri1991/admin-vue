@@ -19,12 +19,13 @@ const order = reactive({
   headers: [
     { title: "", key: "id", width: 40, sortable: false, align: "center" },
     { title: "نام و نام‌خانوادگی", key: "fullName", minWidth: 140 },
-    { title: "شماره تماس", key: "phone", minWidth: 111 },
+    { title: "شماره تماس", key: "phone", minWidth: 111, align: "center" },
+    { title: "کد سفارش", key: "trackingCode", minWidth: 101, align: "center" },
     {
       title: "زمان ثبت سفارش",
       key: "createdAt",
       align: "center",
-      minWidth: 155,
+      minWidth: 160,
     },
     { title: "وضعیت", key: "status", align: "center" },
     { title: "عملیات", key: "actions", align: "center" },
@@ -39,7 +40,11 @@ const filteredItems = computed(() => {
   );
 });
 
-const { data: orders, isPending: isLoading_orders } = useQuery({
+const {
+  data: orders,
+  refetch: refetch_orders,
+  isPending: isLoading_orders,
+} = useQuery({
   queryKey: ["rejectedOrders"],
   queryFn: () =>
     axios.get("orders", {
@@ -84,6 +89,30 @@ const dialog = reactive({
 });
 
 const search = ref("");
+
+const backingItemId = ref(null);
+
+async function goBackToPending(item) {
+  const { isConfirmed } = await areYouSure();
+  if (!isConfirmed) return;
+
+  backingItemId.value = item.id;
+  backToPending(item.id);
+}
+
+const { mutate: backToPending, isPending: isLoading_backToPending } =
+  useMutation({
+    mutationFn: (id) => axios.patch(`orders/pend/${id}`),
+    onSuccess: () => {
+      refetch_orders();
+    },
+    onError: (error) => {
+      console.log(error);
+      const { data } = error.response;
+      if (data.message) appStore.openAlert(2, data.message);
+      else appStore.openAlert(2, "عملیات با خطا مواجه شد");
+    },
+  });
 </script>
 
 <template>
@@ -118,6 +147,10 @@ const search = ref("");
 
     <template #item.phone="{ item }">
       {{ toPersianDigit(item.phone) }}
+    </template>
+
+    <template #item.trackingCode="{ item }">
+      {{ toPersianDigit(item.trackingCode) }}
     </template>
 
     <template #item.payablePrice="{ item }">
@@ -159,6 +192,13 @@ const search = ref("");
     <template #item.actions="{ item }">
       <div class="d-flex justify-center">
         <v-btn color="primary" text="جزئیات" @click="dialog.open(item)" />
+        <v-btn
+          color="#05b105"
+          class="mr-1"
+          text="بازگشت به لیست انتظار"
+          :loading="isLoading_backToPending && backingItemId == item.id"
+          @click="goBackToPending(item)"
+        />
       </div>
     </template>
   </v-data-table>
