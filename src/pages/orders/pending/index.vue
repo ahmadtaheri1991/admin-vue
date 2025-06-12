@@ -507,6 +507,16 @@ function print(item) {
             <v-edit-btn @click="orderItemDialog.open(item)" />
           </template>
 
+          <template #body.append>
+            <tr class="font-weight-bold">
+              <td colspan="5">مجموع</td>
+              <td class="text-center">
+                {{ toPersianDigit(dialog.item.totalPrice) }}
+              </td>
+              <td colspan="2"></td>
+            </tr>
+          </template>
+
           <template
             #item.data-table-expand="{
               item: { alternate },

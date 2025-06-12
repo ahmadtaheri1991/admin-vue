@@ -449,7 +449,7 @@ function print(item) {
 
           <v-col
             cols="auto"
-            v-for="item in pendingOrder.headers.slice(2, -3)"
+            v-for="item in pendingOrder?.headers.slice(2, -3)"
             :key="item.id"
           >
             <data-label
@@ -515,6 +515,16 @@ function print(item) {
           <template #item.totalPrice="{ item }">{{
             toPersianDigit(item.totalPrice)
           }}</template>
+
+          <template #body.append>
+            <tr class="font-weight-bold">
+              <td colspan="5">مجموع</td>
+              <td class="text-center">
+                {{ toPersianDigit(dialog.item.totalPrice) }}
+              </td>
+              <td colspan="2"></td>
+            </tr>
+          </template>
 
           <!-- <template #headers="{ columns, toggleSort }">
             <tr class="bg-grey-lighten-3">
