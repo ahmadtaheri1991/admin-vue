@@ -35,6 +35,8 @@ const product = reactive({
     { title: "دسته‌بندی", key: "category" },
     { title: "بسته‌بندی", key: "weight" },
     { title: "قیمت", key: "price", align: "center" },
+    { title: "تخفیف", key: "discount", align: "center" },
+    { title: "قابل پرداخت", key: "payable", align: "center" },
     { title: "موجودی", key: "inventory", align: "center" },
     { title: "ترتیب نمایش", key: "sortOrder", align: "center" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
@@ -627,6 +629,7 @@ const productModelDialog = reactive({
   form: {
     weightId: null,
     price: "",
+    discount: "",
     inventory: "",
     sortOrder: "",
   },
@@ -652,9 +655,6 @@ const productModelDialog = reactive({
       categoryId: selectedCat.value.id,
       productId: selectedProduct.value.id,
       ...this.form,
-      // weightId: this.form.weight,
-      // price: this.form.price,
-      // inventory: this.form.inventory,
     };
     createProductModel(body);
   },
@@ -663,9 +663,6 @@ const productModelDialog = reactive({
       categoryId: selectedCat.value.id,
       productId: this.item.productId,
       ...this.form,
-      // weightId: this.form.weight,
-      // price: this.form.price,
-      // inventory: this.form.inventory,
     };
     updateProductModel({ id: this.item.id, body });
   },
@@ -896,6 +893,10 @@ const productModelDialog = reactive({
           <td colspan="3"></td>
           <td>{{ item.weight.name }}</td>
           <td class="text-center">{{ toPersianDigit(item.price) }}</td>
+          <td class="text-center">{{ toPersianDigit(item.discount) }}</td>
+          <td class="text-center">
+            {{ toPersianDigit(item.price - item.discount) }}
+          </td>
           <td class="text-center">{{ toPersianDigit(item.inventory) }}</td>
           <td class="text-center">{{ toPersianDigit(item.sortOrder) }}</td>
           <td class="text-center">
@@ -1019,7 +1020,7 @@ const productModelDialog = reactive({
         "
       >
         <v-card-title>{{
-          productModelDialog.item ? "ویرایش دسته‌بندی" : "افزودن دسته‌بندی"
+          productModelDialog.item ? "ویرایش بسته‌بندی" : "افزودن بسته‌بندی"
         }}</v-card-title>
 
         <v-card-text>
@@ -1038,6 +1039,13 @@ const productModelDialog = reactive({
                 v-model="productModelDialog.form.price"
                 label="قیمت"
                 :rules="[required]"
+              />
+            </v-col>
+
+            <v-col cols="12">
+              <number-field
+                v-model="productModelDialog.form.discount"
+                label="تخفیف"
               />
             </v-col>
 
