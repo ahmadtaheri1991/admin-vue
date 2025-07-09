@@ -39,6 +39,7 @@ const product = reactive({
     { title: "قابل پرداخت", key: "payable", align: "center" },
     { title: "موجودی", key: "inventory", align: "center" },
     { title: "ترتیب نمایش", key: "sortOrder", align: "center" },
+    { title: "عدم نمایش", key: "isHidden", align: "center" },
     { title: "عملیات", key: "actions", align: "center", sortable: false },
   ],
   page: 1,
@@ -361,6 +362,7 @@ const productSection = reactive({
     category: null,
     coverImage: null,
     images: [],
+    isHidden: false,
     description: "",
   },
   async open(item) {
@@ -380,6 +382,7 @@ const productSection = reactive({
       this.form.name = item.name;
       this.form.sortOrder = item.sortOrder;
       this.form.category = item.categoryId;
+      this.form.isHidden = item.isHidden;
       this.form.description = item.description;
       coverImage.files = [
         item.productImages
@@ -405,6 +408,7 @@ const productSection = reactive({
     formData.append("name", this.form.name);
     formData.append("sortOrder", this.form.sortOrder);
     formData.append("categoryId", selectedCat.value.id);
+    formData.append("isHidden", this.form.isHidden);
     formData.append("description", this.form.description);
     formData.append("image", this.form.coverImage);
     this.form.images.forEach((image) => {
@@ -419,6 +423,7 @@ const productSection = reactive({
     formData.append("name", this.form.name);
     formData.append("sortOrder", this.form.sortOrder);
     formData.append("categoryId", this.form.category);
+    formData.append("isHidden", this.form.isHidden);
     formData.append("description", this.form.description);
     if (this.form.images.length) {
       this.form.images.forEach((image) => {
@@ -805,6 +810,14 @@ const productModelDialog = reactive({
                 @removefile="
                   (err, file) => images.handleFilePondRemoveFile(err, file)
                 "
+              />
+            </v-col>
+
+            <v-col cols="12" sm="6" md="4">
+              <v-checkbox
+                color="error"
+                label="عدم نمایش"
+                v-model="productSection.form.isHidden"
               />
             </v-col>
 
