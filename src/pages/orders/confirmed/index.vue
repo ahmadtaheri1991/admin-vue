@@ -746,7 +746,7 @@ function print(item) {
 
           <v-spacer />
 
-          <img width="100" src="/images/logo-maze.png" />
+          <img width="100" src="/images/logo-print.png" />
         </div>
 
         <v-row dense>
@@ -781,7 +781,7 @@ function print(item) {
         </v-row>
 
         <v-row dense class="mt-5">
-          <v-col cols="6">هزینه ارسال: ۶۹</v-col>
+          <v-col cols="6">هزینه ارسال: ۹۹</v-col>
           <v-col cols="6"
             >جمع کل:
             {{
@@ -789,7 +789,7 @@ function print(item) {
                 printDialog.item.orderItems.reduce(
                   (sum, cur) => sum + cur.price * cur.count,
                   0
-                ) + 69
+                ) + 99
               )
             }}</v-col
           >
