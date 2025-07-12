@@ -880,6 +880,16 @@ const productModelDialog = reactive({
         {{ item.category.name }}
       </template>
 
+      <template #item.isHidden="{ item }">
+        <v-checkbox-btn
+          v-model="item.isHidden"
+          :ripple="false"
+          readonly
+          color="error"
+          class="d-inline-flex mx-auto"
+        />
+      </template>
+
       <template
         #item.data-table-expand="{
           item: { productModels },
