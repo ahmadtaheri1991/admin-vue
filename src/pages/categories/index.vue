@@ -886,7 +886,7 @@ const productModelDialog = reactive({
           :ripple="false"
           readonly
           color="error"
-          class="d-inline-flex mx-auto"
+          class="d-flex justify-center"
         />
       </template>
 
@@ -922,7 +922,10 @@ const productModelDialog = reactive({
           </td>
           <td class="text-center">{{ toPersianDigit(item.inventory) }}</td>
           <td class="text-center">{{ toPersianDigit(item.sortOrder) }}</td>
+          <td />
           <td class="text-center">
+            <span class="d-inline-block" style="width: 32px" />
+
             <v-edit-btn @click="productModelDialog.open(item)" />
 
             <v-delete-btn
@@ -939,15 +942,8 @@ const productModelDialog = reactive({
 
       <template #item.actions="{ item }">
         <div class="d-flex justify-center align-center">
-          <v-edit-btn @click="productSection.open(item)" />
-
-          <v-delete-btn
-            :loading="isLoading_deleteProduct && deletingItemId == item.id"
-            @click="deleteProductItem(item)"
-          />
-
           <v-btn
-            class="mx-1 rounded-circle fs-14"
+            class="rounded-circle fs-14"
             size="x-small"
             variant="text"
             icon="mdi-package-variant-closed-plus"
@@ -957,6 +953,13 @@ const productModelDialog = reactive({
                 productModelDialog.open();
               }
             "
+          />
+
+          <v-edit-btn @click="productSection.open(item)" />
+
+          <v-delete-btn
+            :loading="isLoading_deleteProduct && deletingItemId == item.id"
+            @click="deleteProductItem(item)"
           />
         </div>
       </template>
