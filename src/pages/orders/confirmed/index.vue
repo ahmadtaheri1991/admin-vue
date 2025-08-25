@@ -757,11 +757,11 @@ function print(item) {
           <v-col cols="6"
             >شماره تماس: {{ toPersianDigit(printDialog.item.phone) }}</v-col
           >
-          <v-col cols="6">آدرس: {{ printDialog.item.address }}</v-col>
-          <v-col cols="6"
+          <v-col cols="12">آدرس: {{ printDialog.item.address }}</v-col>
+          <v-col cols="12"
             >کد پستی: {{ toPersianDigit(printDialog.item.postalCode) }}</v-col
           >
-          <v-col cols="6">توضیحات: {{ printDialog.item.description }}</v-col>
+          <v-col cols="12">توضیحات: {{ printDialog.item.description }}</v-col>
         </v-row>
         <v-divider />
         <div class="mt-5 mb-3">سفارش‌ها</div>
